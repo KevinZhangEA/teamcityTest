@@ -5,7 +5,8 @@ import lib.buildForestFromPaths
 version = "2024.03"
 
 project {
-    val tpl = demoTemplate("v2_tpl_demo")
+    val idp = "v2"
+    val tpl = demoTemplate("${idp}_tpl_demo")
     template(tpl)
 
     val branches  = listOf("branch1", "branch2")
