@@ -13,7 +13,7 @@ project {
         id("${IDP}_tpl_demo")
         name = "tpl-demo"
     
-        // 给业务参数提供默认值，避免隐式 requirement
+        // 统一给业务参数默认值（避免隐式必填）
         params {
             param("CLIENT", "")
             param("CLIENT_CONFIG", "")
@@ -23,45 +23,63 @@ project {
             param("ASSET", "")
         }
     
+        // ★ 仅允许在 Linux 代理上运行
+        requirements {
+            contains("teamcity.agent.jvm.os.name", "Linux")
+        }
+    
         steps {
-            // Unix / macOS
+            // 只保留 Linux/macOS 风格的脚本，但通过 requirements 已限定为 Linux
             script {
-                name = "Hello + Produce artifact (Unix)"
-                conditions { doesNotContain("teamcity.agent.jvm.os.name", "Windows") }
+                name = "Hello + Produce artifact (Linux)"
                 scriptContent = """
                     set -e
                     echo "helloworld"
                     mkdir -p out
+    
+                    PROP_FILE="${'$'}{TEAMCITY_BUILD_PROPERTIES_FILE:-}"
+                    if [ -z "${'$'}PROP_FILE" ] || [ ! -f "${'$'}PROP_FILE" ]; then
+                      echo "No TEAMCITY_BUILD_PROPERTIES_FILE found" >&2
+                    fi
+    
+                    val() { grep -E "^${'$'}1=" "${'$'}PROP_FILE" | sed -e "s/^${'$'}1=//" | head -n1 ; }
+    
+                    buildConf="$(val teamcity.buildConfName)"
+                    buildId="$(val teamcity.build.id)"
+                    buildNumber="$(val build.number)"
+                    branch="$(val teamcity.build.branch)"
+                    agentName="$(val teamcity.agent.name)"
+                    agentOs="$(val teamcity.agent.jvm.os.name)"
+                    client="$(val CLIENT)"
+                    clientConfig="$(val CLIENT_CONFIG)"
+                    server="$(val SERVER)"
+                    tools="$(val TOOLS)"
+                    assetGroup="$(val ASSET_GROUP)"
+                    asset="$(val ASSET)"
+    
                     {
-                      echo "buildId: %teamcity.build.id%"
-                      echo "buildNumber: %build.number%"
-                      echo "branch: %teamcity.build.branch%"
-                      echo "agentName: %teamcity.agent.name%"
+                      echo "buildConf: ${'$'}buildConf"
+                      echo "buildId: ${'$'}buildId"
+                      echo "buildNumber: ${'$'}buildNumber"
+                      echo "branch: ${'$'}branch"
+                      echo "client: ${'$'}client"
+                      echo "clientConfig: ${'$'}clientConfig"
+                      echo "server: ${'$'}server"
+                      echo "tools: ${'$'}tools"
+                      echo "assetGroup: ${'$'}assetGroup"
+                      echo "asset: ${'$'}asset"
+                      echo "agentName: ${'$'}agentName"
+                      echo "agentOs: ${'$'}agentOs"
                       date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ
                     } > out/output.txt
                 """.trimIndent()
             }
-    
-            // Windows
-            script {
-                name = "Hello + Produce artifact (Windows)"
-                conditions { contains("teamcity.agent.jvm.os.name", "Windows") }
-                scriptContent = """
-                    echo helloworld
-                    if not exist out mkdir out
-                    (
-                      echo buildId: %teamcity.build.id%
-                      echo buildNumber: %build.number%
-                      echo branch: %teamcity.build.branch%
-                      echo agentName: %teamcity.agent.name%
-                    ) > out\output.txt
-                """.trimIndent()
-            }
         }
     
-        // 统一发布工件
+        // 发布工件
         artifactRules = "out/**"
     }
+
 
 
     // 注册模板
