@@ -16,7 +16,7 @@ changeBuildType(RelativeId("v2_BT_branch1_Composite")) {
         check(branchFilter == "+:refs/heads/branch1") {
             "Unexpected option value: branchFilter = $branchFilter"
         }
-        branchFilter = "+:*"
+        branchFilter = "+:branch1"
     }
 
     triggers {
