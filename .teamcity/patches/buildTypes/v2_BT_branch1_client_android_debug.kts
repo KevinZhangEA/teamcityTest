@@ -14,7 +14,7 @@ changeBuildType(RelativeId("v2_BT_branch1_client_android_debug")) {
         check(branchFilter == "+:*") {
             "Unexpected option value: branchFilter = $branchFilter"
         }
-        branchFilter = "+:%BRANCH_NAME%"
+        branchFilter = "+:%teamcity.build.branch%"
 
         add(DslContext.settingsRoot.id!!)
     }
