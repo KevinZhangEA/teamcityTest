@@ -18,6 +18,12 @@ changeBuildType(RelativeId("v2_BT_branch1_Composite")) {
     type = BuildTypeSettings.Type.REGULAR
 
     vcs {
+
+        check(branchFilter == "+:refs/heads/branch1") {
+            "Unexpected option value: branchFilter = $branchFilter"
+        }
+        branchFilter = "+:*"
+
         remove(DslContext.settingsRoot.id!!)
         add(RelativeId("HttpsGithubComKevinZhangEATeamcityTestRefsHeadsMain_2"))
     }
