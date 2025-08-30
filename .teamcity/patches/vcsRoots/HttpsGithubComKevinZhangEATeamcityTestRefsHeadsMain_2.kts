@@ -13,7 +13,7 @@ create(DslContext.projectId, GitVcsRoot({
     id("HttpsGithubComKevinZhangEATeamcityTestRefsHeadsMain_2")
     name = "teamcityTestOnGitHub_codebase"
     url = "https://github.com/KevinZhangEA/teamcityTest"
-    branch = "refs/heads/main"
+    branch = "refs/heads/branch1"
     branchSpec = "+:refs/heads/*"
     authMethod = password {
         userName = "KevinZhangEA"
