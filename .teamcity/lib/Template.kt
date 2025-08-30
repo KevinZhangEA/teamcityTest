@@ -8,14 +8,13 @@ fun demoTemplate(id: String) = Template {
     this.id(id)
     name = "tpl-demo"
 
-    // 通用占位参数（避免“必填”叹号）
+    // 通用占位参数，给默认值避免“必填”叹号
     params {
         param("GROUP_PATH", "")
         param("LEAF_KEY", "")
-        // 你也可以在 settings.kts 的每个 leaf 里附加更多自定义参数，这里无需声明
     }
 
-    // 仅在 Linux 代理上运行
+    // 仅 Linux 代理
     requirements { contains("teamcity.agent.jvm.os.name", "Linux") }
 
     steps {
@@ -29,18 +28,15 @@ fun demoTemplate(id: String) = Template {
                 PROP_FILE="${'$'}{TEAMCITY_BUILD_PROPERTIES_FILE:-}"
                 val() { grep -E "^${'$'}1=" "${'$'}PROP_FILE" | sed -e "s/^${'$'}1=//" | head -n1 ; }
 
-                groupPath="$(val GROUP_PATH)"
-                leafKey="$(val LEAF_KEY)"
-
                 {
-                  echo "groupPath: ${'$'}groupPath"
-                  echo "leafKey: ${'$'}leafKey"
+                  echo "groupPath: $(val GROUP_PATH)"
+                  echo "leafKey:   $(val LEAF_KEY)"
                   echo "buildConf: $(val teamcity.buildConfName)"
-                  echo "buildId: $(val teamcity.build.id)"
-                  echo "buildNumber: $(val build.number)"
-                  echo "branch: $(val teamcity.build.branch)"
+                  echo "buildId:   $(val teamcity.build.id)"
+                  echo "buildNum:  $(val build.number)"
+                  echo "branch:    $(val teamcity.build.branch)"
                   echo "agentName: $(val teamcity.agent.name)"
-                  echo "agentOs: $(val teamcity.agent.jvm.os.name)"
+                  echo "agentOs:   $(val teamcity.agent.jvm.os.name)"
                   date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ
                 } > out/output.txt
             """.trimIndent()
@@ -49,4 +45,3 @@ fun demoTemplate(id: String) = Template {
 
     artifactRules = "out/**"
 }
-
