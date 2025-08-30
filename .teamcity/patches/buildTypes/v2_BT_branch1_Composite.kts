@@ -27,7 +27,7 @@ changeBuildType(RelativeId("v2_BT_branch1_Composite")) {
             }
         }
         trigger1.apply {
-            branchFilter = "+:*"
+            branchFilter = "+:branch1"
 
         }
     }
