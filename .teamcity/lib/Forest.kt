@@ -39,13 +39,11 @@ private fun globMatch(pattern: String, path: String): Boolean {
 /**
  * 用“路径清单 + 规则”生成整片森林。
  * - branches：分支列表（每个分支一棵树）
- * - leafPaths：所有叶子路径，如 "client/ios/debug", "server/game", "assets/ui/fonts"
- * - rules：路径到模板的匹配规则（按顺序，先命中先用）
+ * - leafPaths：所有叶子路径
+ * - rules：路径到模板的匹配规则
  * - defaultTpl：未命中规则时的兜底模板；Dispatcher/Composite 也使用该模板
  *
- * Composite 上：
- *  - VCS 触发：增量触发（含 watchChangesInDependencies）
- *  - 定时触发：夜间 03:00 全链清理（入口 clean，建议配合脚本/Swabra 做更彻底清理）
+ * Composite 上：VCS 增量触发（用 %BRANCH%），以及夜间定时（可选 Clean）
  */
 fun buildForestFromPaths(
     root: Project,
@@ -78,39 +76,40 @@ fun buildForestFromPaths(
     }
 
     branches.forEach { br ->
-        // 分支根
-        val prjBranch = Project { id("${idp}_Prj_$br"); name = br }
+        // 分支根项目：这里统一注入 BRANCH 参数，整棵子树继承
+        val prjBranch = Project {
+            id("${idp}_Prj_$br")
+            name = br
+            params { param("BRANCH", br) }     // ★ 关键：给模板/触发器使用
+        }
         root.subProject(prjBranch)
 
-        // 入口 & 分发（看板/起链）
+        // 入口 & 分发
         val composite = BuildType {
             id("${idp}_BT_${br}_Composite")
             name = "00_🚪 ENTRANCE (Composite)"
             type = BuildTypeSettings.Type.COMPOSITE
 
-            // --- 增量：VCS 绑定 & 触发（只看该分支；监听依赖变更）
+            // 绑定 settingsRoot（可保留）；业务仓库可在 UI attach
             vcs {
                 root(DslContext.settingsRoot)
-                branchFilter = "+:$br"
+                // ★ 用“逻辑分支名”的参数
+                branchFilter = "+:%BRANCH%"
             }
+            // VCS 增量触发（也用参数化的分支过滤）
             triggers {
                 vcs {
-                    branchFilter = "+:$br"
+                    branchFilter = "+:%BRANCH%"
                     watchChangesInDependencies = true
-                    // 可选：triggerRules = "+:src/**" "-:docs/**"
-                    // 可选：enableQueueOptimization = true
                 }
             }
-
-            // --- 夜间：每日 03:00 清理后重编
+            // 夜间定时（示例：03:00；如不需要可删除）
             triggers {
                 schedule {
                     schedulingPolicy = daily { hour = 3; minute = 0 }
-                    branchFilter = "+:$br"
-                    withPendingChangesOnly = false   // 每晚都跑
-                    enforceCleanCheckout = true      // 入口强制 clean
-
-                    // 可选：向脚本传参，做更彻底清理/全量编译
+                    branchFilter = "+:%BRANCH%"
+                    withPendingChangesOnly = false
+                    enforceCleanCheckout = true
                     buildParams {
                         param("RUN_MODE", "nightly")
                         param("CLEAN_BUILD", "true")
@@ -143,8 +142,8 @@ fun buildForestFromPaths(
                     bt.params {
                         param("GROUP_PATH", groupPathId)
                         param("LEAF_KEY",   leafKey)
+                        // BRANCH 从项目层继承，无需再设
                     }
-                    // ★ 关键：在 also { bt -> } 内，必须用 bt.dependencies(...)
                     bt.dependencies {
                         snapshot(dispatcher) { synchronizeRevisions = true }
                     }
@@ -179,7 +178,7 @@ fun buildForestFromPaths(
 
         val builtRoots = roots.values.map { buildGroup(prjBranch, emptyList(), it) }
 
-        // Composite 仅用作链路看板：挂上 dispatcher + 所有叶子 + 各层 finalize
+        // Composite 仅用作链路看板
         composite.dependencies {
             snapshot(dispatcher) { synchronizeRevisions = true }
             builtRoots.forEach { b ->
