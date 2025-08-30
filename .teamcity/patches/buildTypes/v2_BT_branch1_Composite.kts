@@ -11,7 +11,7 @@ accordingly, and delete the patch script.
 changeBuildType(RelativeId("v2_BT_branch1_Composite")) {
     outputParams {
         add {
-            param("BRANCH_NAME", "Branch1")
+            param("BRANCH_NAME", "branch1")
         }
     }
 }
