@@ -91,11 +91,11 @@ fun buildForestFromPaths(
             // --- 增量：VCS 绑定 & 触发（只看该分支；监听依赖变更）
             vcs {
                 root(DslContext.settingsRoot)
-                branchFilter = "+:refs/heads/$br"
+                branchFilter = "+:$br"
             }
             triggers {
                 vcs {
-                    branchFilter = "+:refs/heads/$br"
+                    branchFilter = "+:$br"
                     watchChangesInDependencies = true
                     // 可选：triggerRules = "+:src/**" "-:docs/**"
                     // 可选：enableQueueOptimization = true
@@ -106,7 +106,7 @@ fun buildForestFromPaths(
             triggers {
                 schedule {
                     schedulingPolicy = daily { hour = 3; minute = 0 }
-                    branchFilter = "+:refs/heads/$br"
+                    branchFilter = "+:$br"
                     withPendingChangesOnly = false   // 每晚都跑
                     enforceCleanCheckout = true      // 入口强制 clean
 
