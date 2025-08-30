@@ -261,6 +261,6 @@ project {
         }
 
         // 注册分支子项目
-        project(prjBranch)
+        subProject(prjBranch)
     }
 }
