@@ -12,7 +12,7 @@ internal fun clientAndroidTemplateImpl(id: String) = Template {
     
     vcs {
         root(DslContext.settingsRoot)
-        branchFilter = "+:$BRANCH%"
+        branchFilter = "+:%BRANCH%"
     }
     
     steps {
