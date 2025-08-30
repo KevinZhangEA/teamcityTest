@@ -13,13 +13,64 @@ project {
     val tplDemo = Template {
         id("${IDP}_tpl_demo")
         name = "tpl-demo"
+    
+        // 步骤 A：Unix/macOS
         steps {
             script {
-                name = "Hello"
-                scriptContent = """echo "helloworld""""
+                name = "Hello + Produce artifact (Unix)"
+                // 非 Windows 时执行
+                conditions { doesNotContain("teamcity.agent.jvm.os.name", "Windows") }
+                scriptContent = """
+                    set -e
+                    echo "helloworld"
+                    mkdir -p out
+                    {
+                      echo "buildConf: %teamcity.buildConfName%"
+                      echo "buildId: %teamcity.build.id%"
+                      echo "buildNumber: %build.number%"
+                      echo "branch: %teamcity.build.branch%"
+                      echo "client: %CLIENT%"
+                      echo "clientConfig: %CLIENT_CONFIG%"
+                      echo "server: %SERVER%"
+                      echo "tools: %TOOLS%"
+                      echo "assetGroup: %ASSET_GROUP%"
+                      echo "asset: %ASSET%"
+                      echo "agentName: %teamcity.agent.name%"
+                      echo "agentOs: %teamcity.agent.jvm.os.name%"
+                      date -u +"%Y-%m-%dT%H:%M:%SZ"
+                    } > out/output.txt
+                """.trimIndent()
+            }
+    
+            // 步骤 B：Windows
+            script {
+                name = "Hello + Produce artifact (Windows)"
+                conditions { contains("teamcity.agent.jvm.os.name", "Windows") }
+                scriptContent = """
+                    echo helloworld
+                    if not exist out mkdir out
+                    (
+                      echo buildConf: %teamcity.buildConfName%
+                      echo buildId: %teamcity.build.id%
+                      echo buildNumber: %build.number%
+                      echo branch: %teamcity.build.branch%
+                      echo client: %CLIENT%
+                      echo clientConfig: %CLIENT_CONFIG%
+                      echo server: %SERVER%
+                      echo tools: %TOOLS%
+                      echo assetGroup: %ASSET_GROUP%
+                      echo asset: %ASSET%
+                      echo agentName: %teamcity.agent.name%
+                      echo agentOs: %teamcity.agent.jvm.os.name%
+                    ) > out\output.txt
+                """.trimIndent()
             }
         }
+    
+        // 让所有继承该模板的构建都发布 out/** 作为工件
+        artifactRules = "out/**"
     }
+
     // 注册模板
     template(tplDemo)
 
