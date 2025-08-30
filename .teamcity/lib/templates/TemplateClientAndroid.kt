@@ -9,7 +9,12 @@ internal fun clientAndroidTemplateImpl(id: String) = Template {
 
     params { param("GROUP_PATH",""); param("LEAF_KEY","") }
     requirements { contains("teamcity.agent.jvm.os.name", "Linux") }
-
+    
+    vcs {
+        root(DslContext.settingsRoot)
+        branchFilter = "+:$br"
+    }
+    
     steps {
         script {
             name = "Produce artifact (Linux)"
