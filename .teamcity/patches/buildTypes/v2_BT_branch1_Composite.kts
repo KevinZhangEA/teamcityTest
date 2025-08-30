@@ -1,6 +1,7 @@
 package patches.buildTypes
 
 import jetbrains.buildServer.configs.kotlin.*
+import jetbrains.buildServer.configs.kotlin.triggers.schedule
 import jetbrains.buildServer.configs.kotlin.ui.*
 
 /*
@@ -17,5 +18,25 @@ changeBuildType(RelativeId("v2_BT_branch1_Composite")) {
     vcs {
         remove(DslContext.settingsRoot.id!!)
         add(RelativeId("HttpsGithubComKevinZhangEATeamcityTestRefsHeadsMain_2"))
+    }
+
+    triggers {
+        remove {
+            schedule {
+                schedulingPolicy = daily {
+                    hour = 3
+                    minute = 0
+                }
+                branchFilter = "+:refs/heads/branch1"
+                triggerBuild = always()
+                withPendingChangesOnly = false
+
+                enforceCleanCheckout = true
+                buildParams {
+                    param("CLEAN_BUILD", "true")
+                    param("RUN_MODE", "nightly")
+                }
+            }
+        }
     }
 }
