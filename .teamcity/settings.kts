@@ -1,13 +1,12 @@
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.BuildTypeSettings
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
-import jetbrains.buildServer.configs.kotlin.triggers.vcs
 
 version = "2024.03"
 
 project {
 
-    // 统一前缀，确保这次创建的是“全新对象”
+    // 统一前缀，确保创建“全新对象”
     val IDP = "v2"
 
     // --- 通用模板：演示脚本 ---
@@ -24,7 +23,7 @@ project {
     // 注册模板
     template(tplDemo)
 
-    // 维度
+    // 维度（这里只用于命名与层级，不再绑定到 VCS）
     val branches      = listOf("branch1", "branch2")
     val clients       = listOf("ios", "android")
     val clientConfigs = listOf("Debug", "Retail")
@@ -38,27 +37,19 @@ project {
         // 分支子项目
         val prjBranch = Project { id("${IDP}_Prj_$br"); name = br }
 
-        // 入口：Composite（看板/触发入口）
+        // 入口：Composite（看板/入口，无触发器；先手动 Run）
         val composite = BuildType {
             id("${IDP}_BT_${br}_Composite")
             name = "${br} - Composite (Entrance/Board)"
             type = BuildTypeSettings.Type.COMPOSITE
-            triggers {
-                vcs {
-                    branchFilter = "+:refs/heads/$br"
-                    watchChangesInDependencies = true // 监听依赖的变更
-                }
-            }
         }
         prjBranch.buildType(composite)
 
-        // Dispatcher（所有叶子 Job 都 snapshot 依赖它）
+        // Dispatcher（所有叶子 Job 的上游）
         val dispatcher = BuildType {
             id("${IDP}_BT_${br}_Dispatcher")
             name = "${br}_dispatcher"
             templates(tplDemo)
-            vcs { root(DslContext.settingsRoot); branchFilter = "+:refs/heads/$br" }
-            triggers { /* 入口统一在 Composite；这里不放触发器 */ }
         }
         prjBranch.buildType(dispatcher)
 
@@ -77,9 +68,8 @@ project {
                         param("CLIENT", client)
                         param("CLIENT_CONFIG", cfg)
                     }
-                    vcs { root(DslContext.settingsRoot); branchFilter = "+:refs/heads/$br" }
                     dependencies {
-                        snapshot(dispatcher) { synchronizeRevisions = true } // 顺序：先 Dispatcher
+                        snapshot(dispatcher) { synchronizeRevisions = true } // 先跑 Dispatcher
                     }
                 }
                 prjClient.buildType(bt)
@@ -87,7 +77,7 @@ project {
             }
         }
 
-        // Client Finalize：等子 Job 都完成后再完成
+        // Client Finalize：等待所有 client 子任务完成
         val finalizeClient = BuildType {
             id("${IDP}_BT_${br}_client_finalize")
             name = "${br}_client_finalize"
@@ -96,11 +86,11 @@ project {
                 clientBuilds.forEach { child ->
                     snapshot(child) {
                         synchronizeRevisions = true
-                        onDependencyFailure = FailureAction.ADD_PROBLEM // 子失败也执行父做汇总
+                        onDependencyFailure = FailureAction.ADD_PROBLEM
                     }
                     artifacts(child) {
+                        // 默认规则 sameChainOrLastFinished，无需显式设置
                         artifactRules = "** => inputs/${child.name}/"
-                        // cleanDestination = true
                     }
                 }
             }
@@ -117,7 +107,6 @@ project {
                 name = "${br}_server_${srv}"
                 templates(tplDemo)
                 params { param("SERVER", srv) }
-                vcs { root(DslContext.settingsRoot); branchFilter = "+:refs/heads/$br" }
                 dependencies {
                     snapshot(dispatcher) { synchronizeRevisions = true }
                 }
@@ -149,7 +138,6 @@ project {
                 name = "${br}_$t"
                 templates(tplDemo)
                 params { param("TOOLS", t) }
-                vcs { root(DslContext.settingsRoot); branchFilter = "+:refs/heads/$br" }
                 dependencies { snapshot(dispatcher) { synchronizeRevisions = true } }
             }.also { prjTools.buildType(it) }
         }
@@ -184,7 +172,6 @@ project {
                 name = "${br}_assets_${child}"
                 templates(tplDemo)
                 params { param("ASSET_GROUP", "ui"); param("ASSET", child) }
-                vcs { root(DslContext.settingsRoot); branchFilter = "+:refs/heads/$br" }
                 dependencies { snapshot(dispatcher) { synchronizeRevisions = true } }
             }.also { prjAssetsUi.buildType(it) }
         }
@@ -212,7 +199,6 @@ project {
                 name = "${br}_assets_${a}"
                 templates(tplDemo)
                 params { param("ASSET", a) }
-                vcs { root(DslContext.settingsRoot); branchFilter = "+:refs/heads/$br" }
                 dependencies { snapshot(dispatcher) { synchronizeRevisions = true } }
             }.also { prjAssets.buildType(it) }
         }
@@ -237,7 +223,7 @@ project {
         }
         prjAssets.buildType(finalizeAssets)
 
-        // ================== 把所有节点挂到 Composite（漂亮链图） ==================
+        // ================== Composite 汇总（纯看板） ==================
         composite.dependencies {
             snapshot(dispatcher) { synchronizeRevisions = true }
 
@@ -260,7 +246,7 @@ project {
             snapshot(finalizeAssets) { synchronizeRevisions = true }
         }
 
-        // 注册分支子项目
+        // 把分支项目挂到根项目下（注意：是 subProject）
         subProject(prjBranch)
     }
 }
