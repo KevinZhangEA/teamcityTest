@@ -7,11 +7,11 @@ internal fun assetsTemplateImpl(id: String) = Template {
     this.id(id)
     name = "tpl-assets"
 
-    params { param("GROUP_PATH",""); param("LEAF_KEY","") }
+    params { param("GROUP_PATH",""); param("LEAF_KEY",""); param("BRANCH","") }
     requirements { contains("teamcity.agent.jvm.os.name", "Linux") }
     vcs {
         root(DslContext.settingsRoot)
-        branchFilter = "+:$br"
+        branchFilter = "+:%BRANCH%"
     }
     steps {
         script {
