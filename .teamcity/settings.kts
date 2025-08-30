@@ -1,19 +1,29 @@
 import jetbrains.buildServer.configs.kotlin.*
-import lib.demoTemplate
-import lib.buildForestFromPaths
+import lib.*
+import lib.TemplateRule as R
 
 version = "2024.03"
 
 project {
     val idp = "v2"
-    val tpl = demoTemplate("${idp}_tpl_demo")
-    template(tpl)
 
+    // 六套模板（Linux）
+    val tplDefault = defaultTemplate("${idp}_tpl_default")
+    val tplCliIOS  = clientIosTemplate("${idp}_tpl_client_ios")
+    val tplCliAnd  = clientAndroidTemplate("${idp}_tpl_client_android")
+    val tplServer  = serverTemplate("${idp}_tpl_server")
+    val tplTools   = toolsTemplate("${idp}_tpl_tools")
+    val tplAssets  = assetsTemplate("${idp}_tpl_assets")
+
+    // 注册模板
+    listOf(tplDefault, tplCliIOS, tplCliAnd, tplServer, tplTools, tplAssets).forEach { template(it) }
+
+    // 路径清单（叶子）
     val branches  = listOf("branch1", "branch2")
     val leafPaths = listOf(
         // client
-        "client/ios_debug", "client/ios_retail",
-        "client/android_debug", "client/android_retail",
+        "client/ios/debug", "client/ios/retail",
+        "client/android/debug", "client/android/retail",
         // server
         "server/game", "server/relay", "server/blaze", "server/stargate",
         // tools
@@ -21,10 +31,26 @@ project {
         // assets
         "assets/scripts", "assets/players", "assets/stadium", "assets/cinamatics",
         "assets/audio", "assets/designconfigs",
-        // assets/ui 子组
+        // assets/ui
         "assets/ui/textures", "assets/ui/layouts", "assets/ui/localization", "assets/ui/fonts", "assets/ui/videos"
     )
 
-    // 一行生成（不改文件名，仅改内容）
-    buildForestFromPaths(this, idp, tpl, branches, leafPaths)
+    // 规则（先命中先用），finalize 会用 "groupPath/_finalize" 参与匹配
+    val rules = listOf(
+        R("client/ios/**",      tplCliIOS),
+        R("client/android/**",  tplCliAnd),
+        R("server/**",          tplServer),
+        R("tools/**",           tplTools),
+        R("assets/**",          tplAssets)
+    )
+
+    // 一行生成
+    buildForestFromPaths(
+        root       = this,
+        idp        = idp,
+        branches   = branches,
+        leafPaths  = leafPaths,
+        rules      = rules,
+        defaultTpl = tplDefault
+    )
 }

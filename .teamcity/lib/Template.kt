@@ -3,18 +3,15 @@ package lib
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 
-/** 通用演示模板（Linux-only）：生成 out/output.txt 作为工件 */
-fun demoTemplate(id: String) = Template {
+// Linux 基础模板（产出 out/output.txt）
+private fun linuxBaseTemplate(id: String, label: String) = Template {
     this.id(id)
-    name = "tpl-demo"
+    name = label
 
-    // 通用占位参数，给默认值避免“必填”叹号
     params {
         param("GROUP_PATH", "")
         param("LEAF_KEY", "")
     }
-
-    // 仅 Linux 代理
     requirements { contains("teamcity.agent.jvm.os.name", "Linux") }
 
     steps {
@@ -45,3 +42,11 @@ fun demoTemplate(id: String) = Template {
 
     artifactRules = "out/**"
 }
+
+// 六套 Linux 模板
+fun defaultTemplate(id: String)       = linuxBaseTemplate(id, "tpl-default")
+fun clientIosTemplate(id: String)     = linuxBaseTemplate(id, "tpl-client-ios")
+fun clientAndroidTemplate(id: String) = linuxBaseTemplate(id, "tpl-client-android")
+fun serverTemplate(id: String)        = linuxBaseTemplate(id, "tpl-server")
+fun toolsTemplate(id: String)         = linuxBaseTemplate(id, "tpl-tools")
+fun assetsTemplate(id: String)        = linuxBaseTemplate(id, "tpl-assets")
