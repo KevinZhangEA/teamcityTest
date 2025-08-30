@@ -33,13 +33,10 @@ project {
                     echo "helloworld"
                     mkdir -p out
                     {
-                      echo "buildConf: %teamcity.buildConfName%"
                       echo "buildId: %teamcity.build.id%"
                       echo "buildNumber: %build.number%"
                       echo "branch: %teamcity.build.branch%"
-                      echo "clientConfig: %CLIENT_CONFIG%"
                       echo "agentName: %teamcity.agent.name%"
-                      echo "agentOs: %teamcity.agent.jvm.os.name%"
                       date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ
                     } > out/output.txt
                 """.trimIndent()
@@ -53,13 +50,10 @@ project {
                     echo helloworld
                     if not exist out mkdir out
                     (
-                      echo buildConf: %teamcity.buildConfName%
                       echo buildId: %teamcity.build.id%
                       echo buildNumber: %build.number%
                       echo branch: %teamcity.build.branch%
-                      echo clientConfig: %CLIENT_CONFIG%
                       echo agentName: %teamcity.agent.name%
-                      echo agentOs: %teamcity.agent.jvm.os.name%
                     ) > out\output.txt
                 """.trimIndent()
             }
