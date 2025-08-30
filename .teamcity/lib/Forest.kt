@@ -2,7 +2,7 @@ package lib
 
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.BuildTypeSettings
-import jetbrains.buildServer.configs.kotlin.vcs.DslContext
+import jetbrains.buildServer.configs.kotlin.DslContext
 import jetbrains.buildServer.configs.kotlin.triggers.vcs
 import jetbrains.buildServer.configs.kotlin.triggers.schedule
 
@@ -44,8 +44,8 @@ private fun globMatch(pattern: String, path: String): Boolean {
  * - defaultTpl：未命中规则时的兜底模板；Dispatcher/Composite 也使用该模板
  *
  * Composite 上：
- *  - VCS 触发：增量触发（含依赖变更 watchChangesInDependencies）
- *  - 定时触发：夜间 03:00 全链 Clean Checkout
+ *  - VCS 触发：增量触发（含 watchChangesInDependencies）
+ *  - 定时触发：夜间 03:00 全链清理（入口 clean，建议配合脚本/Swabra 做更彻底清理）
  */
 fun buildForestFromPaths(
     root: Project,
@@ -102,20 +102,15 @@ fun buildForestFromPaths(
                 }
             }
 
-            // --- 夜间：每日 03:00 全链 Clean Checkout
+            // --- 夜间：每日 03:00 清理后重编
             triggers {
                 schedule {
-                    schedulingPolicy = daily {
-                        hour = 3
-                        minute = 0
-                    }
+                    schedulingPolicy = daily { hour = 3; minute = 0 }
                     branchFilter = "+:refs/heads/$br"
                     withPendingChangesOnly = false   // 每晚都跑
-                    // 若要只在有未构建更改时跑：withPendingChangesOnly = true
+                    enforceCleanCheckout = true      // 入口强制 clean
 
-                    // 强制 Clean Checkout（本配置）
-                    enforceCleanCheckout = true
-                    // 下发夜间标识参数（脚本可据此执行“全量编译/额外检查”等）
+                    // 可选：向脚本传参，做更彻底清理/全量编译
                     buildParams {
                         param("RUN_MODE", "nightly")
                         param("CLEAN_BUILD", "true")
@@ -149,7 +144,8 @@ fun buildForestFromPaths(
                         param("GROUP_PATH", groupPathId)
                         param("LEAF_KEY",   leafKey)
                     }
-                    dependencies {
+                    // ★ 关键：在 also { bt -> } 内，必须用 bt.dependencies(...)
+                    bt.dependencies {
                         snapshot(dispatcher) { synchronizeRevisions = true }
                     }
                     prj.buildType(bt)
