@@ -1,314 +1,60 @@
 import jetbrains.buildServer.configs.kotlin.*
-import jetbrains.buildServer.configs.kotlin.BuildTypeSettings
-import jetbrains.buildServer.configs.kotlin.buildSteps.script
+import lib.*
+import lib.GroupSpec as G
+import lib.LeafSpec as L
 
 version = "2024.03"
 
 project {
+    val idp = "v2"
 
-    // 统一前缀，确保创建“全新对象”
-    val IDP = "v2"
+    // 模板（Linux-only，产出 out/output.txt）
+    val tpl = demoTemplate("${idp}_tpl_demo")
+    template(tpl)
 
-    val tplDemo = Template {
-        id("${IDP}_tpl_demo")
-        name = "tpl-demo"
-    
-        // 统一给业务参数默认值（避免隐式必填）
-        params {
-            param("CLIENT", "")
-            param("CLIENT_CONFIG", "")
-            param("SERVER", "")
-            param("TOOLS", "")
-            param("ASSET_GROUP", "")
-            param("ASSET", "")
-        }
-    
-        // ★ 仅允许在 Linux 代理上运行
-        requirements {
-            contains("teamcity.agent.jvm.os.name", "Linux")
-        }
-    
-        steps {
-            // 只保留 Linux/macOS 风格的脚本，但通过 requirements 已限定为 Linux
-            script {
-                name = "Hello + Produce artifact (Linux)"
-                scriptContent = """
-                    set -e
-                    echo "helloworld"
-                    mkdir -p out
-    
-                    PROP_FILE="${'$'}{TEAMCITY_BUILD_PROPERTIES_FILE:-}"
-                    if [ -z "${'$'}PROP_FILE" ] || [ ! -f "${'$'}PROP_FILE" ]; then
-                      echo "No TEAMCITY_BUILD_PROPERTIES_FILE found" >&2
-                    fi
-    
-                    val() { grep -E "^${'$'}1=" "${'$'}PROP_FILE" | sed -e "s/^${'$'}1=//" | head -n1 ; }
-    
-                    buildConf="$(val teamcity.buildConfName)"
-                    buildId="$(val teamcity.build.id)"
-                    buildNumber="$(val build.number)"
-                    branch="$(val teamcity.build.branch)"
-                    agentName="$(val teamcity.agent.name)"
-                    agentOs="$(val teamcity.agent.jvm.os.name)"
-                    client="$(val CLIENT)"
-                    clientConfig="$(val CLIENT_CONFIG)"
-                    server="$(val SERVER)"
-                    tools="$(val TOOLS)"
-                    assetGroup="$(val ASSET_GROUP)"
-                    asset="$(val ASSET)"
-    
-                    {
-                      echo "buildConf: ${'$'}buildConf"
-                      echo "buildId: ${'$'}buildId"
-                      echo "buildNumber: ${'$'}buildNumber"
-                      echo "branch: ${'$'}branch"
-                      echo "client: ${'$'}client"
-                      echo "clientConfig: ${'$'}clientConfig"
-                      echo "server: ${'$'}server"
-                      echo "tools: ${'$'}tools"
-                      echo "assetGroup: ${'$'}assetGroup"
-                      echo "asset: ${'$'}asset"
-                      echo "agentName: ${'$'}agentName"
-                      echo "agentOs: ${'$'}agentOs"
-                      date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ
-                    } > out/output.txt
-                """.trimIndent()
-            }
-        }
-    
-        // 发布工件
-        artifactRules = "out/**"
-    }
+    // 纯配置：声明组与叶子。你可以随意增删组/层级/叶子与参数。
+    val spec = Spec(
+        branches = listOf("branch1", "branch2"),
+        rootGroups = listOf(
+            // 例：client 组（由配置决定有哪些 leaf）
+            G(
+                id = "client", name = "client",
+                leaves = listOf(
+                    L(key = "ios_debug",   displayName = "branch_client_ios_debug",   params = mapOf("platform" to "ios", "config" to "Debug")),
+                    L(key = "ios_retail",  displayName = "branch_client_ios_retail",  params = mapOf("platform" to "ios", "config" to "Retail")),
+                    L(key = "android_debug",  displayName = "branch_client_android_debug",  params = mapOf("platform" to "android", "config" to "Debug")),
+                    L(key = "android_retail", displayName = "branch_client_android_retail", params = mapOf("platform" to "android", "config" to "Retail")),
+                )
+            ),
+            // 例：server 组
+            G(
+                id = "server", name = "server",
+                leaves = listOf(
+                    L("game"), L("relay"), L("blaze"), L("stargate")
+                )
+            ),
+            // 例：tools 组
+            G(
+                id = "tools", name = "tools",
+                leaves = listOf(L("tools"), L("tools1"), L("tools2"), L("tools3"))
+            ),
+            // 例：assets 组（含一个 ui 子组 + 其它直接叶子）
+            G(
+                id = "assets", name = "assets",
+                leaves = listOf( // 同级的“兄弟叶子”
+                    L("scripts"), L("players"), L("stadium"), L("cinamatics"),
+                    L("audio"), L("designconfigs")
+                ),
+                groups = listOf(
+                    G(
+                        id = "ui", name = "ui",
+                        leaves = listOf(L("textures"), L("layouts"), L("localization"), L("fonts"), L("videos"))
+                    )
+                )
+            )
+        )
+    )
 
-
-
-    // 注册模板
-    template(tplDemo)
-
-    // 维度（这里只用于命名与层级，不再绑定到 VCS）
-    val branches      = listOf("branch1", "branch2")
-    val clients       = listOf("ios", "android")
-    val clientConfigs = listOf("Debug", "Retail")
-    val servers       = listOf("game", "relay", "blaze", "stargate")
-    val tools         = listOf("tools", "tools1", "tools2", "tools3")
-    val assetsUiChildren = listOf("textures", "layouts", "localization", "fonts", "videos")
-    val assetsSiblings   = listOf("scripts", "players", "stadium", "cinamatics", "audio", "designconfigs")
-
-    branches.forEach { br ->
-
-        // 分支子项目
-        val prjBranch = Project { id("${IDP}_Prj_$br"); name = br }
-
-        // 入口：Composite（看板/入口，无触发器；先手动 Run）
-        val composite = BuildType {
-            id("${IDP}_BT_${br}_Composite")
-            name = "${br} - Composite (Entrance/Board)"
-            type = BuildTypeSettings.Type.COMPOSITE
-        }
-        prjBranch.buildType(composite)
-
-        // Dispatcher（所有叶子 Job 的上游）
-        val dispatcher = BuildType {
-            id("${IDP}_BT_${br}_Dispatcher")
-            name = "${br}_dispatcher"
-            templates(tplDemo)
-        }
-        prjBranch.buildType(dispatcher)
-
-        // ================== CLIENT 层 ==================
-        val prjClient = Project { id("${IDP}_Prj_${br}_client"); name = "client" }
-        prjBranch.subProject(prjClient)
-
-        val clientBuilds = mutableListOf<BuildType>()
-        clients.forEach { client ->
-            clientConfigs.forEach { cfg ->
-                val bt = BuildType {
-                    id("${IDP}_BT_${br}_client_${client}_${cfg}")
-                    name = "${br}_${client}_${cfg.lowercase()}"
-                    templates(tplDemo)
-                    params {
-                        param("CLIENT", client)
-                        param("CLIENT_CONFIG", cfg)
-                    }
-                    dependencies {
-                        snapshot(dispatcher) { synchronizeRevisions = true } // 先跑 Dispatcher
-                    }
-                }
-                prjClient.buildType(bt)
-                clientBuilds += bt
-            }
-        }
-
-        // Client Finalize：等待所有 client 子任务完成
-        val finalizeClient = BuildType {
-            id("${IDP}_BT_${br}_client_finalize")
-            name = "${br}_client_finalize"
-            templates(tplDemo)
-            dependencies {
-                clientBuilds.forEach { child ->
-                    snapshot(child) {
-                        synchronizeRevisions = true
-                        onDependencyFailure = FailureAction.ADD_PROBLEM
-                    }
-                    artifacts(child) {
-                        // 默认规则 sameChainOrLastFinished，无需显式设置
-                        artifactRules = "** => inputs/${child.name}/"
-                    }
-                }
-            }
-        }
-        prjClient.buildType(finalizeClient)
-
-        // ================== SERVER 层 ==================
-        val prjServer = Project { id("${IDP}_Prj_${br}_server"); name = "server" }
-        prjBranch.subProject(prjServer)
-
-        val serverBuilds = servers.map { srv ->
-            BuildType {
-                id("${IDP}_BT_${br}_server_${srv}")
-                name = "${br}_server_${srv}"
-                templates(tplDemo)
-                params { param("SERVER", srv) }
-                dependencies {
-                    snapshot(dispatcher) { synchronizeRevisions = true }
-                }
-            }.also { prjServer.buildType(it) }
-        }
-
-        val finalizeServer = BuildType {
-            id("${IDP}_BT_${br}_server_finalize")
-            name = "${br}_server_finalize"
-            templates(tplDemo)
-            dependencies {
-                serverBuilds.forEach { child ->
-                    snapshot(child) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
-                    artifacts(child) {
-                        artifactRules = "** => inputs/${child.name}/"
-                    }
-                }
-            }
-        }
-        prjServer.buildType(finalizeServer)
-
-        // ================== TOOLS 层 ==================
-        val prjTools = Project { id("${IDP}_Prj_${br}_tools"); name = "tools" }
-        prjBranch.subProject(prjTools)
-
-        val toolsBuilds = tools.map { t ->
-            BuildType {
-                id("${IDP}_BT_${br}_tools_${t}")
-                name = "${br}_$t"
-                templates(tplDemo)
-                params { param("TOOLS", t) }
-                dependencies { snapshot(dispatcher) { synchronizeRevisions = true } }
-            }.also { prjTools.buildType(it) }
-        }
-
-        val finalizeTools = BuildType {
-            id("${IDP}_BT_${br}_tools_finalize")
-            name = "${br}_tools_finalize"
-            templates(tplDemo)
-            dependencies {
-                toolsBuilds.forEach { child ->
-                    snapshot(child) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
-                    artifacts(child) {
-                        artifactRules = "** => inputs/${child.name}/"
-                    }
-                }
-            }
-        }
-        prjTools.buildType(finalizeTools)
-
-        // ================== ASSETS 层 ==================
-        val prjAssets = Project { id("${IDP}_Prj_${br}_assets"); name = "assets" }
-        prjBranch.subProject(prjAssets)
-
-        // --- assets/ui 子树 ---
-        val prjAssetsUi = Project { id("${IDP}_Prj_${br}_assets_ui"); name = "ui" }
-        prjAssets.subProject(prjAssetsUi)
-
-        // ui 的叶子构建
-        val uiLeafBuilds = assetsUiChildren.map { child ->
-            BuildType {
-                id("${IDP}_BT_${br}_assets_ui_${child}")
-                name = "${br}_assets_${child}"
-                templates(tplDemo)
-                params { param("ASSET_GROUP", "ui"); param("ASSET", child) }
-                dependencies { snapshot(dispatcher) { synchronizeRevisions = true } }
-            }.also { prjAssetsUi.buildType(it) }
-        }
-
-        // UI Finalize：等待其子叶子完成
-        val finalizeUi = BuildType {
-            id("${IDP}_BT_${br}_assets_ui_finalize")
-            name = "${br}_assets_ui_finalize"
-            templates(tplDemo)
-            dependencies {
-                uiLeafBuilds.forEach { child ->
-                    snapshot(child) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
-                    artifacts(child) {
-                        artifactRules = "** => inputs/${child.name}/"
-                    }
-                }
-            }
-        }
-        prjAssetsUi.buildType(finalizeUi)
-
-        // assets 的与 ui 平级的兄弟叶子
-        val assetsSiblingBuilds = assetsSiblings.map { a ->
-            BuildType {
-                id("${IDP}_BT_${br}_assets_${a}")
-                name = "${br}_assets_${a}"
-                templates(tplDemo)
-                params { param("ASSET", a) }
-                dependencies { snapshot(dispatcher) { synchronizeRevisions = true } }
-            }.also { prjAssets.buildType(it) }
-        }
-
-        // Assets Finalize：等待 UI Finalize + 其它叶子完成
-        val finalizeAssets = BuildType {
-            id("${IDP}_BT_${br}_assets_finalize")
-            name = "${br}_assets_finalize"
-            templates(tplDemo)
-            dependencies {
-                snapshot(finalizeUi) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
-                artifacts(finalizeUi) {
-                    artifactRules = "** => inputs/${finalizeUi.name}/"
-                }
-                assetsSiblingBuilds.forEach { leaf ->
-                    snapshot(leaf) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
-                    artifacts(leaf) {
-                        artifactRules = "** => inputs/${leaf.name}/"
-                    }
-                }
-            }
-        }
-        prjAssets.buildType(finalizeAssets)
-
-        // ================== Composite 汇总（纯看板） ==================
-        composite.dependencies {
-            snapshot(dispatcher) { synchronizeRevisions = true }
-
-            // client
-            clientBuilds.forEach { snapshot(it) { synchronizeRevisions = true } }
-            snapshot(finalizeClient) { synchronizeRevisions = true }
-
-            // server
-            serverBuilds.forEach { snapshot(it) { synchronizeRevisions = true } }
-            snapshot(finalizeServer) { synchronizeRevisions = true }
-
-            // tools
-            toolsBuilds.forEach { snapshot(it) { synchronizeRevisions = true } }
-            snapshot(finalizeTools) { synchronizeRevisions = true }
-
-            // assets
-            uiLeafBuilds.forEach { snapshot(it) { synchronizeRevisions = true } }
-            snapshot(finalizeUi) { synchronizeRevisions = true }
-            assetsSiblingBuilds.forEach { snapshot(it) { synchronizeRevisions = true } }
-            snapshot(finalizeAssets) { synchronizeRevisions = true }
-        }
-
-        // 把分支项目挂到根项目下（注意：是 subProject）
-        subProject(prjBranch)
-    }
+    // 一行生成整片森林（不写任何业务分支判断）
+    buildForest(this, idp, tpl, spec)
 }
