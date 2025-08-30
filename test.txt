@@ -1,6 +1,0 @@
-This is a test file. Used to simulate a VCS change.
-Test again.
-One more time.
-Again.
-Again.
-One more.
