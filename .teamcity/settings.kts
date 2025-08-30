@@ -91,7 +91,7 @@ project {
                 clientBuilds.forEach { child ->
                     snapshot(child) {
                         synchronizeRevisions = true
-                        onDependencyFailure = FailureAction.RUN // 子失败也可运行做汇总；按需改为 CANCEL
+                        onDependencyFailure = FailureAction.ADD_PROBLEM // 子失败也可运行做汇总；按需改为 CANCEL
                     }
                     // 示例：Artifact 依赖占位（建议 UI 勾“Build from the same chain”）
                     artifacts(child) {
@@ -127,7 +127,7 @@ project {
             templates(tplDemo)
             dependencies {
                 serverBuilds.forEach { child ->
-                    snapshot(child) { synchronizeRevisions = true; onDependencyFailure = FailureAction.RUN }
+                    snapshot(child) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
                     artifacts(child) { artifactRules = "** => inputs/${child.name}/" }
                 }
             }
@@ -155,7 +155,7 @@ project {
             templates(tplDemo)
             dependencies {
                 toolsBuilds.forEach { child ->
-                    snapshot(child) { synchronizeRevisions = true; onDependencyFailure = FailureAction.RUN }
+                    snapshot(child) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
                     artifacts(child) { artifactRules = "** => inputs/${child.name}/" }
                 }
             }
@@ -189,7 +189,7 @@ project {
             templates(tplDemo)
             dependencies {
                 uiLeafBuilds.forEach { child ->
-                    snapshot(child) { synchronizeRevisions = true; onDependencyFailure = FailureAction.RUN }
+                    snapshot(child) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
                     artifacts(child) { artifactRules = "** => inputs/${child.name}/" }
                 }
             }
@@ -214,10 +214,10 @@ project {
             name = "${br}_assets_finalize"
             templates(tplDemo)
             dependencies {
-                snapshot(finalizeUi) { synchronizeRevisions = true; onDependencyFailure = FailureAction.RUN }
+                snapshot(finalizeUi) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
                 artifacts(finalizeUi) { artifactRules = "** => inputs/${finalizeUi.name}/" }
                 assetsSiblingBuilds.forEach { leaf ->
-                    snapshot(leaf) { synchronizeRevisions = true; onDependencyFailure = FailureAction.RUN }
+                    snapshot(leaf) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
                     artifacts(leaf) { artifactRules = "** => inputs/${leaf.name}/" }
                 }
             }
