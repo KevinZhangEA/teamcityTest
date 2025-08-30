@@ -2,6 +2,9 @@ package lib
 
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.BuildTypeSettings
+import jetbrains.buildServer.configs.kotlin.vcs.DslContext
+import jetbrains.buildServer.configs.kotlin.triggers.vcs
+import jetbrains.buildServer.configs.kotlin.triggers.schedule
 
 // 规则：用路径模式选择模板（pattern 支持 "*" 与 "**"）
 data class TemplateRule(val pattern: String, val template: Template)
@@ -39,6 +42,10 @@ private fun globMatch(pattern: String, path: String): Boolean {
  * - leafPaths：所有叶子路径，如 "client/ios/debug", "server/game", "assets/ui/fonts"
  * - rules：路径到模板的匹配规则（按顺序，先命中先用）
  * - defaultTpl：未命中规则时的兜底模板；Dispatcher/Composite 也使用该模板
+ *
+ * Composite 上：
+ *  - VCS 触发：增量触发（含依赖变更 watchChangesInDependencies）
+ *  - 定时触发：夜间 03:00 全链 Clean Checkout
  */
 fun buildForestFromPaths(
     root: Project,
@@ -80,13 +87,50 @@ fun buildForestFromPaths(
             id("${idp}_BT_${br}_Composite")
             name = "00_🚪 ENTRANCE (Composite)"
             type = BuildTypeSettings.Type.COMPOSITE
+
+            // --- 增量：VCS 绑定 & 触发（只看该分支；监听依赖变更）
+            vcs {
+                root(DslContext.settingsRoot)
+                branchFilter = "+:refs/heads/$br"
+            }
+            triggers {
+                vcs {
+                    branchFilter = "+:refs/heads/$br"
+                    watchChangesInDependencies = true
+                    // 可选：triggerRules = "+:src/**" "-:docs/**"
+                    // 可选：enableQueueOptimization = true
+                }
+            }
+
+            // --- 夜间：每日 03:00 全链 Clean Checkout
+            triggers {
+                schedule {
+                    schedulingPolicy = daily {
+                        hour = 3
+                        minute = 0
+                    }
+                    branchFilter = "+:refs/heads/$br"
+                    withPendingChangesOnly = false   // 每晚都跑
+                    // 若要只在有未构建更改时跑：withPendingChangesOnly = true
+
+                    // 强制 Clean Checkout（本配置）
+                    enforceCleanCheckout = true
+                    // 下发夜间标识参数（脚本可据此执行“全量编译/额外检查”等）
+                    buildParams {
+                        param("RUN_MODE", "nightly")
+                        param("CLEAN_BUILD", "true")
+                    }
+                }
+            }
         }
+        prjBranch.buildType(composite)
+
         val dispatcher = BuildType {
             id("${idp}_BT_${br}_Dispatcher")
             name = "01_📦 DISPATCHER"
             templates(defaultTpl)
         }
-        prjBranch.buildType(composite); prjBranch.buildType(dispatcher)
+        prjBranch.buildType(dispatcher)
 
         data class Built(val allLeaves: List<BuildType>, val fin: BuildType)
 
@@ -105,7 +149,9 @@ fun buildForestFromPaths(
                         param("GROUP_PATH", groupPathId)
                         param("LEAF_KEY",   leafKey)
                     }
-                    bt.dependencies { snapshot(dispatcher) { synchronizeRevisions = true } }
+                    dependencies {
+                        snapshot(dispatcher) { synchronizeRevisions = true }
+                    }
                     prj.buildType(bt)
                 }
             }
@@ -137,7 +183,7 @@ fun buildForestFromPaths(
 
         val builtRoots = roots.values.map { buildGroup(prjBranch, emptyList(), it) }
 
-        // Composite 仅用作链路看板
+        // Composite 仅用作链路看板：挂上 dispatcher + 所有叶子 + 各层 finalize
         composite.dependencies {
             snapshot(dispatcher) { synchronizeRevisions = true }
             builtRoots.forEach { b ->

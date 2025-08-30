@@ -35,7 +35,7 @@ project {
         "assets/ui/textures", "assets/ui/layouts", "assets/ui/localization", "assets/ui/fonts", "assets/ui/videos"
     )
 
-    // 规则（先命中先用），finalize 会用 "groupPath/_finalize" 参与匹配
+    // 规则（先命中先用）；finalize 会用 "groupPath/_finalize" 来参与匹配
     val rules = listOf(
         R("client/ios/**",      tplCliIOS),
         R("client/android/**",  tplCliAnd),
@@ -44,7 +44,7 @@ project {
         R("assets/**",          tplAssets)
     )
 
-    // 一行生成
+    // 生成整片森林（Composite 已内置 VCS 增量触发 + 夜间 Clean 重编译）
     buildForestFromPaths(
         root       = this,
         idp        = idp,
