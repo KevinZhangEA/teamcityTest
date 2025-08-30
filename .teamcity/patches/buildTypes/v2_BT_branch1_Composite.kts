@@ -11,5 +11,6 @@ accordingly, and delete the patch script.
 changeBuildType(RelativeId("v2_BT_branch1_Composite")) {
     vcs {
         remove(DslContext.settingsRoot.id!!)
+        add(RelativeId("HttpsGithubComKevinZhangEATeamcityTestRefsHeadsMain_2"))
     }
 }
