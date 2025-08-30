@@ -1,7 +1,9 @@
 package patches.buildTypes
 
 import jetbrains.buildServer.configs.kotlin.*
+import jetbrains.buildServer.configs.kotlin.triggers.VcsTrigger
 import jetbrains.buildServer.configs.kotlin.triggers.schedule
+import jetbrains.buildServer.configs.kotlin.triggers.vcs
 import jetbrains.buildServer.configs.kotlin.ui.*
 
 /*
@@ -21,6 +23,16 @@ changeBuildType(RelativeId("v2_BT_branch1_Composite")) {
     }
 
     triggers {
+        val trigger1 = find<VcsTrigger> {
+            vcs {
+                branchFilter = "+:refs/heads/branch1"
+                watchChangesInDependencies = true
+            }
+        }
+        trigger1.apply {
+            watchChangesInDependencies = false
+
+        }
         remove {
             schedule {
                 schedulingPolicy = daily {
