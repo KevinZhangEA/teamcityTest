@@ -9,6 +9,11 @@ To apply the patch, change the buildType with id = 'v2_BT_branch1_Composite'
 accordingly, and delete the patch script.
 */
 changeBuildType(RelativeId("v2_BT_branch1_Composite")) {
+    check(type == BuildTypeSettings.Type.COMPOSITE) {
+        "Unexpected option value: type = $type"
+    }
+    type = BuildTypeSettings.Type.REGULAR
+
     vcs {
         remove(DslContext.settingsRoot.id!!)
         add(RelativeId("HttpsGithubComKevinZhangEATeamcityTestRefsHeadsMain_2"))
