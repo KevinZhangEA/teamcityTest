@@ -99,7 +99,6 @@ project {
                         onDependencyFailure = FailureAction.ADD_PROBLEM // 子失败也执行父做汇总
                     }
                     artifacts(child) {
-                        buildRule = sameChain()                 // 取“同一链”的产物
                         artifactRules = "** => inputs/${child.name}/"
                         // cleanDestination = true
                     }
@@ -133,7 +132,6 @@ project {
                 serverBuilds.forEach { child ->
                     snapshot(child) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
                     artifacts(child) {
-                        buildRule = sameChain()
                         artifactRules = "** => inputs/${child.name}/"
                     }
                 }
@@ -164,7 +162,6 @@ project {
                 toolsBuilds.forEach { child ->
                     snapshot(child) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
                     artifacts(child) {
-                        buildRule = sameChain()
                         artifactRules = "** => inputs/${child.name}/"
                     }
                 }
@@ -201,7 +198,6 @@ project {
                 uiLeafBuilds.forEach { child ->
                     snapshot(child) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
                     artifacts(child) {
-                        buildRule = sameChain()
                         artifactRules = "** => inputs/${child.name}/"
                     }
                 }
@@ -229,13 +225,11 @@ project {
             dependencies {
                 snapshot(finalizeUi) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
                 artifacts(finalizeUi) {
-                    buildRule = sameChain()
                     artifactRules = "** => inputs/${finalizeUi.name}/"
                 }
                 assetsSiblingBuilds.forEach { leaf ->
                     snapshot(leaf) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
                     artifacts(leaf) {
-                        buildRule = sameChain()
                         artifactRules = "** => inputs/${leaf.name}/"
                     }
                 }
