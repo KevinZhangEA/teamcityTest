@@ -10,6 +10,12 @@ accordingly, and delete the patch script.
 */
 changeBuildType(RelativeId("v2_BT_branch1_client_android_debug")) {
     vcs {
+
+        check(branchFilter == "+:*") {
+            "Unexpected option value: branchFilter = $branchFilter"
+        }
+        branchFilter = "+:branch1"
+
         add(DslContext.settingsRoot.id!!)
     }
 }
