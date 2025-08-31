@@ -8,8 +8,8 @@ internal fun clientAndroidTemplateImpl(id: String, vcsRoot: VcsRoot) = Template 
     name = "tpl-client-android"
 
     params { param("GROUP_PATH","" ); param("LEAF_KEY","" ); param("BRANCH","") }
-    // add shared submit defaults
-    addSubmitParamsDefaults()
+    // add shared submit defaults with VCS root auto-detection
+    addSubmitParamsDefaults(vcsRoot)
 
     requirements { contains("teamcity.agent.jvm.os.name", "Windows") }
 

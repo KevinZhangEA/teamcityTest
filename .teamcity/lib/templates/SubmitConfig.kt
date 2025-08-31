@@ -8,7 +8,14 @@ object SubmitConfig {
     // 默认参数配置
     object Defaults {
         const val SUBMIT = "false"
-        const val SUBMIT_VCS = "git"
+        // 移除 SUBMIT_VCS 默认值，改为根据 VCS root 自动检测
+    }
+
+    // VCS 类型检测
+    object VcsDetection {
+        const val GIT_VCS_TYPE = "jetbrains.buildServer.configs.kotlin.vcs.GitVcsRoot"
+        const val PERFORCE_VCS_TYPE = "jetbrains.buildServer.configs.kotlin.vcs.PerforceVcsRoot"
+        const val DEFAULT_VCS_TYPE = "git"  // 默认使用 git
     }
 
     // Git配置
@@ -55,7 +62,7 @@ object SubmitConfig {
         const val NOTHING_TO_SUBMIT = "[submit] nothing to submit."
         const val P4_RECONCILE_FAILED = "[submit] p4 reconcile failed, skip."
         const val P4_SUBMIT_FAILED = "[submit] p4 submit failed, skip."
-        const val UNKNOWN_VCS = "[submit] unknown SUBMIT_VCS=%SUBMIT_VCS%, skip."
+        const val VCS_AUTO_DETECTED = "[submit] VCS auto-detected: %s"
     }
 
     // 环境变量名称
@@ -64,7 +71,7 @@ object SubmitConfig {
         const val GIT_USER_NAME = "GIT_USER_NAME"
         const val GIT_PUSH_URL = "GIT_PUSH_URL"
         const val SUBMIT = "SUBMIT"
-        const val SUBMIT_VCS = "SUBMIT_VCS"
+        const val VCS_TYPE = "VCS_TYPE"  // 新增：用于传递检测到的 VCS 类型
         const val GROUP_PATH = "GROUP_PATH"
         const val LEAF_KEY = "LEAF_KEY"
         const val BUILD_NUMBER = "build.number"

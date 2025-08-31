@@ -6,16 +6,36 @@ import jetbrains.buildServer.configs.kotlin.buildSteps.script
 
 /**
  * Shared helpers to attach a gated "Submit to VCS" step to templates.
+ * 根据 VCS root 类型自动检测使用 Git 还是 Perforce
  * Controlled by params:
  *  - SUBMIT: true/false (default false)
- *  - SUBMIT_VCS: git | perforce (default git)
  * Optional env params for Git: GIT_USER_EMAIL, GIT_USER_NAME, GIT_PUSH_URL
  */
 
-fun Template.addSubmitParamsDefaults() {
+/**
+ * 检测 VCS root 类型
+ */
+fun detectVcsType(vcsRoot: VcsRoot): String {
+    return when (vcsRoot::class.java.name) {
+        SubmitConfig.VcsDetection.GIT_VCS_TYPE -> "git"
+        SubmitConfig.VcsDetection.PERFORCE_VCS_TYPE -> "perforce"
+        else -> {
+            // 尝试通过类名包含关键字来检测
+            val className = vcsRoot::class.java.simpleName.lowercase()
+            when {
+                className.contains("git") -> "git"
+                className.contains("perforce") || className.contains("p4") -> "perforce"
+                else -> SubmitConfig.VcsDetection.DEFAULT_VCS_TYPE
+            }
+        }
+    }
+}
+
+fun Template.addSubmitParamsDefaults(vcsRoot: VcsRoot) {
+    val detectedVcsType = detectVcsType(vcsRoot)
     params {
         param(SubmitConfig.EnvVars.SUBMIT, SubmitConfig.Defaults.SUBMIT)
-        param(SubmitConfig.EnvVars.SUBMIT_VCS, SubmitConfig.Defaults.SUBMIT_VCS)
+        param(SubmitConfig.EnvVars.VCS_TYPE, detectedVcsType)
     }
 }
 
@@ -30,7 +50,8 @@ fun Template.addSubmitStepWindows() {
                   echo ${SubmitConfig.Messages.SUBMIT_DISABLED}
                   exit /b 0
                 )
-                set "_vcs=%${SubmitConfig.EnvVars.SUBMIT_VCS}%"
+                set "_vcs=%${SubmitConfig.EnvVars.VCS_TYPE}%"
+                echo ${SubmitConfig.Messages.VCS_AUTO_DETECTED.replace("%s", "%_vcs%")}
                 if /I "%_vcs%"=="git" (
                   where ${SubmitConfig.Git.CHECK_COMMAND} >nul 2>&1 || ( echo ${SubmitConfig.Messages.GIT_NOT_FOUND} & exit /b 0 )
                   if not defined ${SubmitConfig.EnvVars.GIT_USER_EMAIL} set "${SubmitConfig.EnvVars.GIT_USER_EMAIL}=${SubmitConfig.Git.DEFAULT_USER_EMAIL}"
@@ -57,7 +78,7 @@ fun Template.addSubmitStepWindows() {
                   )
                   p4 submit -d "${SubmitConfig.Perforce.SUBMIT_DESCRIPTION_TEMPLATE}" || ( echo ${SubmitConfig.Messages.P4_SUBMIT_FAILED} & exit /b 0 )
                 ) else (
-                  echo ${SubmitConfig.Messages.UNKNOWN_VCS}
+                  echo [submit] unknown VCS type: %_vcs%, skip.
                   exit /b 0
                 )
             """.trimIndent()
@@ -73,7 +94,9 @@ fun Template.addSubmitStepUnix(stepName: String) {
             scriptContent = """
                 set -euo pipefail
                 if [ "%${SubmitConfig.EnvVars.SUBMIT}%" != "true" ]; then echo "${SubmitConfig.Messages.SUBMIT_DISABLED}"; exit 0; fi
-                case "%${SubmitConfig.EnvVars.SUBMIT_VCS}%" in
+                _vcs="%${SubmitConfig.EnvVars.VCS_TYPE}%"
+                echo "${SubmitConfig.Messages.VCS_AUTO_DETECTED.replace("%s", "$_vcs")}"
+                case "$_vcs" in
                   git)
                     if ! command -v ${SubmitConfig.Git.CHECK_COMMAND} >/dev/null 2>&1; then echo "${SubmitConfig.Messages.GIT_NOT_FOUND}"; exit 0; fi
                     git config user.email "${'$'}{${SubmitConfig.EnvVars.GIT_USER_EMAIL}:-${SubmitConfig.Git.DEFAULT_USER_EMAIL}}"
@@ -95,7 +118,7 @@ fun Template.addSubmitStepUnix(stepName: String) {
                     p4 submit -d "${SubmitConfig.Perforce.SUBMIT_DESCRIPTION_TEMPLATE}" || { echo "${SubmitConfig.Messages.P4_SUBMIT_FAILED}"; exit 0; }
                     ;;
                   *)
-                    echo "${SubmitConfig.Messages.UNKNOWN_VCS}"; exit 0;;
+                    echo "[submit] unknown VCS type: $_vcs, skip."; exit 0;;
                 esac
             """.trimIndent()
         }
