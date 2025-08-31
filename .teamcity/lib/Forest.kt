@@ -2,7 +2,6 @@ package lib
 
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.BuildTypeSettings
-import jetbrains.buildServer.configs.kotlin.DslContext
 import jetbrains.buildServer.configs.kotlin.triggers.vcs
 import jetbrains.buildServer.configs.kotlin.triggers.schedule
 
@@ -42,6 +41,7 @@ private fun globMatch(pattern: String, path: String): Boolean {
  * - leafPaths：所有叶子路径
  * - rules：路径到模板的匹配规则
  * - defaultTpl：未命中规则时的兜底模板；Dispatcher/Composite 也使用该模板
+ * - vcsRoot：统一的 VCS root
  *
  * Composite 上：VCS 增量触发（用 %BRANCH%），以及夜间定时（可选 Clean）
  */
@@ -51,7 +51,8 @@ fun buildForestFromPaths(
     branches: List<String>,
     leafPaths: List<String>,
     rules: List<TemplateRule>,
-    defaultTpl: Template
+    defaultTpl: Template,
+    vcsRoot: VcsRoot // 新增参数
 ) {
     // 组树装配
     val roots = linkedMapOf<String, Node>()
@@ -90,10 +91,8 @@ fun buildForestFromPaths(
             name = "00_🚪 ENTRANCE (Composite)"
             type = BuildTypeSettings.Type.COMPOSITE
 
-            // 绑定 settingsRoot（可保留）；业务仓库可在 UI attach
             vcs {
-                root(DslContext.settingsRoot)
-                // ★ 用“逻辑分支名”的参数
+                root(vcsRoot) // 使用统一 VCS root
                 branchFilter = "+:%BRANCH%"
             }
             // VCS 增量触发（也用参数化的分支过滤）

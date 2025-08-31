@@ -3,7 +3,7 @@ package lib.templates
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 
-internal fun toolsTemplateImpl(id: String) = Template {
+internal fun toolsTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     this.id(id)
     name = "tpl-tools"
 
@@ -11,7 +11,7 @@ internal fun toolsTemplateImpl(id: String) = Template {
     requirements { contains("teamcity.agent.jvm.os.name", "Linux") }
     
     vcs {
-        root(DslContext.settingsRoot)
+        root(vcsRoot)
         branchFilter = "+:%BRANCH%"
     }
     

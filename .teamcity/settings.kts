@@ -7,13 +7,16 @@ version = "2025.07"
 project {
     val idp = "v2"
 
+    // 使用系统配置的 VCS root
+    val vcsRoot = DslContext.settingsRoot
+
     // 六套模板（Linux）
-    val tplDefault = defaultTemplate("${idp}_tpl_default")
-    val tplCliIOS  = clientIosTemplate("${idp}_tpl_client_ios")
-    val tplCliAnd  = clientAndroidTemplate("${idp}_tpl_client_android")
-    val tplServer  = serverTemplate("${idp}_tpl_server")
-    val tplTools   = toolsTemplate("${idp}_tpl_tools")
-    val tplAssets  = assetsTemplate("${idp}_tpl_assets")
+    val tplDefault = defaultTemplate("${idp}_tpl_default", vcsRoot)
+    val tplCliIOS  = clientIosTemplate("${idp}_tpl_client_ios", vcsRoot)
+    val tplCliAnd  = clientAndroidTemplate("${idp}_tpl_client_android", vcsRoot)
+    val tplServer  = serverTemplate("${idp}_tpl_server", vcsRoot)
+    val tplTools   = toolsTemplate("${idp}_tpl_tools", vcsRoot)
+    val tplAssets  = assetsTemplate("${idp}_tpl_assets", vcsRoot)
 
     // 注册模板
     listOf(tplDefault, tplCliIOS, tplCliAnd, tplServer, tplTools, tplAssets).forEach { template(it) }
@@ -51,6 +54,7 @@ project {
         branches   = branches,
         leafPaths  = leafPaths,
         rules      = rules,
-        defaultTpl = tplDefault
+        defaultTpl = tplDefault,
+        vcsRoot    = vcsRoot
     )
 }
