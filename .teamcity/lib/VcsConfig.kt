@@ -1,72 +1,65 @@
 package lib
 
 /**
- * Submit configuration settings
- * 将submit相关的配置从代码中抽出来，便于管理和修改
+ * VCS configuration settings
+ * 将VCS相关的配置从代码中抽出来，便于管理和修改
  */
-object SubmitConfig {
+object VcsConfig {
     // 默认参数配置
     object Defaults {
-        const val SUBMIT = "false"
-        // 移除 SUBMIT_VCS 默认值，改为根据 VCS root 自动检测
+        const val VCS_SUBMIT = "false"
     }
 
     // VCS 类型检测
     object VcsDetection {
         const val GIT_VCS_TYPE = "jetbrains.buildServer.configs.kotlin.vcs.GitVcsRoot"
         const val PERFORCE_VCS_TYPE = "jetbrains.buildServer.configs.kotlin.vcs.PerforceVcsRoot"
-        const val DEFAULT_VCS_TYPE = "git"  // 默认使用 git
+        const val DEFAULT_VCS_TYPE = "git"
     }
 
     // Git配置
     object Git {
         const val DEFAULT_USER_EMAIL = "ci@example.com"
         const val DEFAULT_USER_NAME = "CI Bot"
-
-        // Git提交消息模板
         const val COMMIT_MESSAGE_TEMPLATE = "chore: submit artifacts for %build.number% [%GROUP_PATH%/%LEAF_KEY%]"
-
-        // Git命令检查
         const val CHECK_COMMAND = "git"
-
-        // 支持的文件/目录
         val TRACKED_PATHS = listOf("out", "placeholder.out")
     }
 
     // Perforce配置
     object Perforce {
-        // P4用户配置
         const val DEFAULT_USER = "buildbot"
         const val DEFAULT_CLIENT = "teamcity-client"
-
-        // P4提交描述模板
+        const val DEFAULT_PORT = "perforce:1666"
         const val SUBMIT_DESCRIPTION_TEMPLATE = "chore: submit artifacts for %build.number% [%GROUP_PATH%/%LEAF_KEY%]"
-
-        // P4命令检查
         const val CHECK_COMMAND = "p4"
-
-        // P4命令参数
         const val RECONCILE_FLAGS = "-a -e -d ."
         const val OPENED_CHECK_FLAGS = "-m1"
+
+        // 安全相关配置
+        const val USE_TICKET_AUTH = true  // 优先使用 ticket 认证而不是密码
+        const val P4_TICKETS_FILE = ".p4tickets"  // ticket 文件路径
     }
 
     // 步骤名称配置
     object StepNames {
-        const val WINDOWS = "Submit to VCS (Windows)"
-        const val LINUX = "Submit to VCS (Linux)"
-        const val MACOS = "Submit to VCS (macOS)"
+        const val WINDOWS = "VCS Submit (Windows)"
+        const val LINUX = "VCS Submit (Linux)"
+        const val MACOS = "VCS Submit (macOS)"
     }
 
     // 消息配置
     object Messages {
-        const val SUBMIT_DISABLED = "[submit] SUBMIT!=true, skip."
-        const val GIT_NOT_FOUND = "[submit] git not found, skip."
-        const val P4_NOT_FOUND = "[submit] p4 not found, skip."
-        const val NOTHING_TO_COMMIT = "[submit] nothing to commit."
-        const val NOTHING_TO_SUBMIT = "[submit] nothing to submit."
-        const val P4_RECONCILE_FAILED = "[submit] p4 reconcile failed, skip."
-        const val P4_SUBMIT_FAILED = "[submit] p4 submit failed, skip."
-        const val VCS_AUTO_DETECTED = "[submit] VCS auto-detected: %s"
+        const val VCS_SUBMIT_DISABLED = "[vcs] VCS_SUBMIT!=true, skip."
+        const val GIT_NOT_FOUND = "[vcs] git not found, skip."
+        const val P4_NOT_FOUND = "[vcs] p4 not found, skip."
+        const val NOTHING_TO_COMMIT = "[vcs] nothing to commit."
+        const val NOTHING_TO_SUBMIT = "[vcs] nothing to submit."
+        const val P4_RECONCILE_FAILED = "[vcs] p4 reconcile failed, skip."
+        const val P4_SUBMIT_FAILED = "[vcs] p4 submit failed, skip."
+        const val VCS_AUTO_DETECTED = "[vcs] VCS auto-detected: %s"
+        const val P4_AUTH_INFO = "[vcs] P4 authentication configured (details hidden for security)"
+        const val P4_AUTH_WARNING = "[vcs] Warning: No P4 authentication configured"
     }
 
     // 环境变量名称
@@ -80,10 +73,11 @@ object SubmitConfig {
         const val P4_USER = "P4USER"
         const val P4_CLIENT = "P4CLIENT"
         const val P4_PORT = "P4PORT"
-        const val P4_PASSWD = "P4PASSWD"
+        const val P4_PASSWD = "P4PASSWD"  // 敏感信息，建议使用 TeamCity 密码参数
+        const val P4_TICKET = "P4TICKET"  // 更安全的认证方式
 
         // 通用环境变量
-        const val SUBMIT = "SUBMIT"
+        const val VCS_SUBMIT = "VCS_SUBMIT"
         const val VCS_TYPE = "VCS_TYPE"
         const val GROUP_PATH = "GROUP_PATH"
         const val LEAF_KEY = "LEAF_KEY"
