@@ -5,7 +5,7 @@ import jetbrains.buildServer.configs.kotlin.buildSteps.script
 import lib.*
 import lib.addP4SubmitStepUnix
 
-internal fun defaultTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String? = null) = Template {
+internal fun defaultTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String) = Template {
     this.id(id)
     name = "tpl-default"
 
@@ -14,8 +14,6 @@ internal fun defaultTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String?
         param("LEAF_KEY","")
         param("BRANCH","")
     }
-    // add shared VCS defaults with VCS root auto-detection
-    addVcsParamsDefaults(vcsRoot)
 
     requirements { contains("teamcity.agent.jvm.os.name", "Linux") }
 
@@ -46,8 +44,8 @@ internal fun defaultTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String?
         }
     }
 
-    // append shared VCS submit step for Unix/Linux
-    addVcsSubmitStepUnix(VcsConfig.StepNames.LINUX, p4Stream)
+    // append P4 submit step for Unix/Linux
+    addP4SubmitStepUnix(VcsConfig.StepNames.LINUX, p4Stream)
 
     artifactRules = "out/**"
 }
