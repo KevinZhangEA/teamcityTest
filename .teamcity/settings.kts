@@ -2,7 +2,7 @@ import jetbrains.buildServer.configs.kotlin.*
 import lib.*
 import lib.TemplateRule as R
 
-version = "2024.03"
+version = "2025.07"
 
 project {
     val idp = "v2"
