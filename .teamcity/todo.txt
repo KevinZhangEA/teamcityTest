@@ -1,5 +1,6 @@
 TODOs:
 [HIGH] [WIP] Add submit function in build jobs.
+Set github copilot prompts for Teamcity DSL to have a better usage.
 
 
 
