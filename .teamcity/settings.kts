@@ -23,7 +23,7 @@ project {
     listOf(tplDefault, tplCliIOS, tplCliAnd, tplServer, tplTools, tplAssets).forEach { template(it) }
 
     // 路径清单（叶子）
-    val branches  = listOf("main", "branch1", "branch2")
+    val branches  = listOf("branch1", "branch2")
     val leafPaths = listOf(
         // client
         "client/ios/debug", "client/ios/retail",
