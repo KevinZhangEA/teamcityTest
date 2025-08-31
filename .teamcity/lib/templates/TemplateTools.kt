@@ -19,9 +19,10 @@ internal fun toolsTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
         script {
             name = "Build tools (Windows)"
             scriptContent = """
-                call codebase\buildscripts\build_tools.bat
-
                 setlocal EnableDelayedExpansion
+                
+                rem call codebase\buildscripts\build_tools.bat
+
                 set rc=!errorlevel!
                 echo [debug] build_tools.bat rc=!rc!
                 if not "!rc!"=="0" (
