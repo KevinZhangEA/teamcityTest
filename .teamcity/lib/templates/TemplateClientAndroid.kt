@@ -27,7 +27,7 @@ internal fun clientAndroidTemplateImpl(id: String, vcsRoot: VcsRoot) = Template 
                   echo groupPath: %GROUP_PATH%
                   echo leafKey:   %LEAF_KEY%
                   echo platform:  android
-                  powershell -Command "Get-Date -Format yyyy-MM-ddTHH:mm:ssZ"
+                  echo time:      %date% %time%
                 ) > out/output.txt
             """.trimIndent()
         }
