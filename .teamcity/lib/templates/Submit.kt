@@ -14,50 +14,50 @@ import jetbrains.buildServer.configs.kotlin.buildSteps.script
 
 fun Template.addSubmitParamsDefaults() {
     params {
-        param("SUBMIT", "false")
-        param("SUBMIT_VCS", "git")
+        param(SubmitConfig.EnvVars.SUBMIT, SubmitConfig.Defaults.SUBMIT)
+        param(SubmitConfig.EnvVars.SUBMIT_VCS, SubmitConfig.Defaults.SUBMIT_VCS)
     }
 }
 
 fun Template.addSubmitStepWindows() {
     steps {
         script {
-            name = "Submit to VCS (Windows)"
+            name = SubmitConfig.StepNames.WINDOWS
             workingDir = "%teamcity.build.checkoutDir%"
             scriptContent = """
                 setlocal EnableExtensions EnableDelayedExpansion
-                if /I not "%SUBMIT%"=="true" (
-                  echo [submit] SUBMIT!=true, skip.
+                if /I not "%${SubmitConfig.EnvVars.SUBMIT}%"=="true" (
+                  echo ${SubmitConfig.Messages.SUBMIT_DISABLED}
                   exit /b 0
                 )
-                set "_vcs=%SUBMIT_VCS%"
+                set "_vcs=%${SubmitConfig.EnvVars.SUBMIT_VCS}%"
                 if /I "%_vcs%"=="git" (
-                  where git >nul 2>&1 || ( echo [submit] git not found, skip. & exit /b 0 )
-                  if not defined GIT_USER_EMAIL set "GIT_USER_EMAIL=ci@example.com"
-                  if not defined GIT_USER_NAME  set "GIT_USER_NAME=CI Bot"
-                  git config user.email "%GIT_USER_EMAIL%"
-                  git config user.name  "%GIT_USER_NAME%"
-                  if exist out git add -A out
-                  if exist placeholder.out git add placeholder.out
-                  git diff --cached --quiet && ( echo [submit] nothing to commit. & exit /b 0 )
-                  set "_msg=chore: submit artifacts for %build.number% [%GROUP_PATH%/%LEAF_KEY%]"
-                  if defined GIT_PUSH_URL (
-                    git commit -m "%_msg%" && git push "%GIT_PUSH_URL%" HEAD
+                  where ${SubmitConfig.Git.CHECK_COMMAND} >nul 2>&1 || ( echo ${SubmitConfig.Messages.GIT_NOT_FOUND} & exit /b 0 )
+                  if not defined ${SubmitConfig.EnvVars.GIT_USER_EMAIL} set "${SubmitConfig.EnvVars.GIT_USER_EMAIL}=${SubmitConfig.Git.DEFAULT_USER_EMAIL}"
+                  if not defined ${SubmitConfig.EnvVars.GIT_USER_NAME}  set "${SubmitConfig.EnvVars.GIT_USER_NAME}=${SubmitConfig.Git.DEFAULT_USER_NAME}"
+                  git config user.email "%${SubmitConfig.EnvVars.GIT_USER_EMAIL}%"
+                  git config user.name  "%${SubmitConfig.EnvVars.GIT_USER_NAME}%"
+                  if exist ${SubmitConfig.Git.TRACKED_PATHS[0]} git add -A ${SubmitConfig.Git.TRACKED_PATHS[0]}
+                  if exist ${SubmitConfig.Git.TRACKED_PATHS[1]} git add ${SubmitConfig.Git.TRACKED_PATHS[1]}
+                  git diff --cached --quiet && ( echo ${SubmitConfig.Messages.NOTHING_TO_COMMIT} & exit /b 0 )
+                  set "_msg=${SubmitConfig.Git.COMMIT_MESSAGE_TEMPLATE}"
+                  if defined ${SubmitConfig.EnvVars.GIT_PUSH_URL} (
+                    git commit -m "%_msg%" && git push "%${SubmitConfig.EnvVars.GIT_PUSH_URL}%" HEAD
                   ) else (
                     git commit -m "%_msg%" && git push origin HEAD
                   )
                 ) else if /I "%_vcs%"=="perforce" (
-                  where p4 >nul 2>&1 || ( echo [submit] p4 not found, skip. & exit /b 0 )
-                  p4 reconcile -a -e -d . || ( echo [submit] p4 reconcile failed, skip. & exit /b 0 )
+                  where ${SubmitConfig.Perforce.CHECK_COMMAND} >nul 2>&1 || ( echo ${SubmitConfig.Messages.P4_NOT_FOUND} & exit /b 0 )
+                  p4 reconcile ${SubmitConfig.Perforce.RECONCILE_FLAGS} || ( echo ${SubmitConfig.Messages.P4_RECONCILE_FAILED} & exit /b 0 )
                   set "HASOPENED="
-                  for /f "usebackq delims=" %%A in (`p4 opened -m1 2^>nul`) do set "HASOPENED=1"
+                  for /f "usebackq delims=" %%A in (`p4 opened ${SubmitConfig.Perforce.OPENED_CHECK_FLAGS} 2^>nul`) do set "HASOPENED=1"
                   if not defined HASOPENED (
-                    echo [submit] nothing to submit.
+                    echo ${SubmitConfig.Messages.NOTHING_TO_SUBMIT}
                     exit /b 0
                   )
-                  p4 submit -d "chore: submit artifacts for %build.number% [%GROUP_PATH%/%LEAF_KEY%]" || ( echo [submit] p4 submit failed, skip. & exit /b 0 )
+                  p4 submit -d "${SubmitConfig.Perforce.SUBMIT_DESCRIPTION_TEMPLATE}" || ( echo ${SubmitConfig.Messages.P4_SUBMIT_FAILED} & exit /b 0 )
                 ) else (
-                  echo [submit] unknown SUBMIT_VCS=%SUBMIT_VCS%, skip.
+                  echo ${SubmitConfig.Messages.UNKNOWN_VCS}
                   exit /b 0
                 )
             """.trimIndent()
@@ -72,33 +72,32 @@ fun Template.addSubmitStepUnix(stepName: String) {
             workingDir = "%teamcity.build.checkoutDir%"
             scriptContent = """
                 set -euo pipefail
-                if [ "%SUBMIT%" != "true" ]; then echo "[submit] SUBMIT!=true, skip."; exit 0; fi
-                case "%SUBMIT_VCS%" in
+                if [ "%${SubmitConfig.EnvVars.SUBMIT}%" != "true" ]; then echo "${SubmitConfig.Messages.SUBMIT_DISABLED}"; exit 0; fi
+                case "%${SubmitConfig.EnvVars.SUBMIT_VCS}%" in
                   git)
-                    if ! command -v git >/dev/null 2>&1; then echo "[submit] git not found, skip."; exit 0; fi
-                    git config user.email "${'$'}{GIT_USER_EMAIL:-ci@example.com}"
-                    git config user.name  "${'$'}{GIT_USER_NAME:-CI Bot}"
-                    [ -d out ] && git add -A out || true
-                    [ -f placeholder.out ] && git add placeholder.out || true
-                    if git diff --cached --quiet; then echo "[submit] nothing to commit."; exit 0; fi
-                    msg="chore: submit artifacts for %build.number% [%GROUP_PATH%/%LEAF_KEY%]"
-                    if [ -n "%GIT_PUSH_URL%" ]; then
-                      git commit -m "${'$'}msg" && git push "%GIT_PUSH_URL%" HEAD
+                    if ! command -v ${SubmitConfig.Git.CHECK_COMMAND} >/dev/null 2>&1; then echo "${SubmitConfig.Messages.GIT_NOT_FOUND}"; exit 0; fi
+                    git config user.email "${'$'}{${SubmitConfig.EnvVars.GIT_USER_EMAIL}:-${SubmitConfig.Git.DEFAULT_USER_EMAIL}}"
+                    git config user.name  "${'$'}{${SubmitConfig.EnvVars.GIT_USER_NAME}:-${SubmitConfig.Git.DEFAULT_USER_NAME}}"
+                    [ -d ${SubmitConfig.Git.TRACKED_PATHS[0]} ] && git add -A ${SubmitConfig.Git.TRACKED_PATHS[0]} || true
+                    [ -f ${SubmitConfig.Git.TRACKED_PATHS[1]} ] && git add ${SubmitConfig.Git.TRACKED_PATHS[1]} || true
+                    if git diff --cached --quiet; then echo "${SubmitConfig.Messages.NOTHING_TO_COMMIT}"; exit 0; fi
+                    msg="${SubmitConfig.Git.COMMIT_MESSAGE_TEMPLATE}"
+                    if [ -n "%${SubmitConfig.EnvVars.GIT_PUSH_URL}%" ]; then
+                      git commit -m "${'$'}msg" && git push "%${SubmitConfig.EnvVars.GIT_PUSH_URL}%" HEAD
                     else
                       git commit -m "${'$'}msg" && git push origin HEAD
                     fi
                     ;;
                   perforce)
-                    if ! command -v p4 >/dev/null 2>&1; then echo "[submit] p4 not found, skip."; exit 0; fi
-                    if ! p4 reconcile -a -e -d .; then echo "[submit] p4 reconcile failed, skip."; exit 0; fi
-                    if [ "$(p4 opened -m1 2>/dev/null | wc -l | tr -d ' ')" = "0" ]; then echo "[submit] nothing to submit."; exit 0; fi
-                    p4 submit -d "chore: submit artifacts for %build.number% [%GROUP_PATH%/%LEAF_KEY%]" || { echo "[submit] p4 submit failed, skip."; exit 0; }
+                    if ! command -v ${SubmitConfig.Perforce.CHECK_COMMAND} >/dev/null 2>&1; then echo "${SubmitConfig.Messages.P4_NOT_FOUND}"; exit 0; fi
+                    if ! p4 reconcile ${SubmitConfig.Perforce.RECONCILE_FLAGS}; then echo "${SubmitConfig.Messages.P4_RECONCILE_FAILED}"; exit 0; fi
+                    if [ "$(p4 opened ${SubmitConfig.Perforce.OPENED_CHECK_FLAGS} 2>/dev/null | wc -l | tr -d ' ')" = "0" ]; then echo "${SubmitConfig.Messages.NOTHING_TO_SUBMIT}"; exit 0; fi
+                    p4 submit -d "${SubmitConfig.Perforce.SUBMIT_DESCRIPTION_TEMPLATE}" || { echo "${SubmitConfig.Messages.P4_SUBMIT_FAILED}"; exit 0; }
                     ;;
                   *)
-                    echo "[submit] unknown SUBMIT_VCS=%SUBMIT_VCS%, skip."; exit 0;;
+                    echo "${SubmitConfig.Messages.UNKNOWN_VCS}"; exit 0;;
                 esac
             """.trimIndent()
         }
     }
 }
-
