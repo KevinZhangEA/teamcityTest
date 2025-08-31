@@ -9,7 +9,7 @@ internal fun serverTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
 
     params { param("GROUP_PATH",""); param("LEAF_KEY",""); param("BRANCH","")  }
     requirements { contains("teamcity.agent.jvm.os.name", "Linux") }
-    
+
     vcs {
         root(vcsRoot)
         branchFilter = "+:%BRANCH%"
@@ -23,10 +23,9 @@ internal fun serverTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
                 echo "helloworld (server)"
                 mkdir -p out
                 {
-                  echo "groupPath: ${GROUP_PATH}"
-                  echo "leafKey:   ${LEAF_KEY}"
+                  echo "groupPath: %GROUP_PATH%"
+                  echo "leafKey:   %LEAF_KEY%"
                   echo "role:      server"
-                  echo "agentOs:   ${teamcity_agent_jvm_os_name}"
                   date -u +%Y-%m-%dT%H:%M:%SZ
                 } > out/output.txt
             """.trimIndent()
