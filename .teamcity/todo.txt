@@ -1,7 +1,6 @@
 TODOs:
 [HIGH] Add submit function in build jobs.
 [HIGH] check how to us checkout rules and configure them in template.
-Need to rollback the last change in branch1, the one added debug info in buildtool.bat
 
 
 
