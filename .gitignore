@@ -1,0 +1,3 @@
+# Ignore Copilot and other IDE/tool state files
+copilotdiffstate.xml
+
