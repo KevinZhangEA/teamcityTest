@@ -3,28 +3,38 @@ package lib.templates
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 
-internal fun toolsTemplateImpl(id: String) = Template {
+internal fun toolsTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     this.id(id)
     name = "tpl-tools"
 
-    params { param("GROUP_PATH",""); param("LEAF_KEY","") }
-    requirements { contains("teamcity.agent.jvm.os.name", "Linux") }
+    params { param("GROUP_PATH",""); param("LEAF_KEY",""); param("BRANCH","") }
+    requirements { contains("teamcity.agent.jvm.os.name", "Windows") }
 
+    vcs {
+        root(vcsRoot)
+        branchFilter = "+:%BRANCH%"
+    }
+    
     steps {
         script {
-            name = "Produce artifact (Linux)"
+            name = "Build tools (Windows)"
             scriptContent = """
-                set -e
-                echo "helloworld (tools)"
-                mkdir -p out
-                PROP_FILE="${'$'}{TEAMCITY_BUILD_PROPERTIES_FILE:-}"
-                val() { grep -E "^${'$'}1=" "${'$'}PROP_FILE" | sed -e "s/^${'$'}1=//" | head -n1 ; }
-                {
-                  echo "groupPath: $(val GROUP_PATH)"
-                  echo "leafKey:   $(val LEAF_KEY)"
-                  echo "category:  tools"
-                  date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ
-                } > out/output.txt
+                call codebase\buildscripts\build_tools.bat
+                
+                rem 生成 output.txt 以兼容旧流水线产物
+                if not exist out mkdir out
+                setlocal enabledelayedexpansion
+                set PROP_FILE=%TEAMCITY_BUILD_PROPERTIES_FILE%
+                for /f "usebackq tokens=1,2 delims==" %%A in (`type !PROP_FILE!`) do (
+                  if "%%A"=="GROUP_PATH" set GROUP_PATH=%%B
+                  if "%%A"=="LEAF_KEY" set LEAF_KEY=%%B
+                )
+                (
+                  echo groupPath: !GROUP_PATH!
+                  echo leafKey:   !LEAF_KEY!
+                  echo category:  tools
+                  powershell -Command "Get-Date -Format yyyy-MM-ddTHH:mm:ssZ"
+                ) > out/output.txt
             """.trimIndent()
         }
     }
