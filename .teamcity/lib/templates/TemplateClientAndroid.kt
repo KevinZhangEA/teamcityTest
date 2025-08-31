@@ -4,7 +4,7 @@ import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 import lib.*
 
-internal fun clientAndroidTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String? = null) = Template {
+internal fun clientAndroidTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String) = Template {
     this.id(id)
     name = "tpl-client-android"
 
