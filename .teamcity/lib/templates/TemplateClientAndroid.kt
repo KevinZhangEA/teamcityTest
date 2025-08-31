@@ -7,7 +7,10 @@ internal fun clientAndroidTemplateImpl(id: String, vcsRoot: VcsRoot) = Template 
     this.id(id)
     name = "tpl-client-android"
 
-    params { param("GROUP_PATH",""); param("LEAF_KEY",""); param("BRANCH","")  }
+    params { param("GROUP_PATH","" ); param("LEAF_KEY","" ); param("BRANCH","") }
+    // add shared submit defaults
+    addSubmitParamsDefaults()
+
     requirements { contains("teamcity.agent.jvm.os.name", "Windows") }
 
     vcs {
@@ -18,15 +21,20 @@ internal fun clientAndroidTemplateImpl(id: String, vcsRoot: VcsRoot) = Template 
     steps {
         script {
             name = "Build android (Windows)"
+            workingDir = "%teamcity.build.checkoutDir%"
             scriptContent = """
                 setlocal EnableDelayedExpansion
                 
-                call codebase\buildscripts\build_tools.bat
+                if not exist codebase\buildscripts\build_android.bat (
+                  echo [error] missing codebase\buildscripts\build_android.bat
+                  exit /b 1
+                )
+                call codebase\buildscripts\build_android.bat
 
                 set rc=!errorlevel!
-                echo [debug] build_tools.bat rc=!rc!
+                echo [debug] build_android.bat rc=!rc!
                 if not "!rc!"=="0" (
-                  echo [error] build_tools.bat failed with code !rc!
+                  echo [error] build_android.bat failed with code !rc!
                   exit /b !rc!
                 )
                 
@@ -40,6 +48,9 @@ internal fun clientAndroidTemplateImpl(id: String, vcsRoot: VcsRoot) = Template 
             """.trimIndent()
         }
     }
+
+    // append shared submit step for Windows
+    addSubmitStepWindows()
 
     artifactRules = "out/**"
 }

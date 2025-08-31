@@ -8,6 +8,9 @@ internal fun toolsTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     name = "tpl-tools"
 
     params { param("GROUP_PATH",""); param("LEAF_KEY",""); param("BRANCH","") }
+    // add shared submit defaults
+    addSubmitParamsDefaults()
+
     requirements { contains("teamcity.agent.jvm.os.name", "Windows") }
 
     vcs {
@@ -18,9 +21,14 @@ internal fun toolsTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     steps {
         script {
             name = "Build tools (Windows)"
+            workingDir = "%teamcity.build.checkoutDir%"
             scriptContent = """
                 setlocal EnableDelayedExpansion
                 
+                if not exist codebase\buildscripts\build_android.bat (
+                  echo [error] missing codebase\buildscripts\build_android.bat
+                  exit /b 1
+                )
                 call codebase\buildscripts\build_tools.bat
 
                 set rc=!errorlevel!
@@ -29,8 +37,7 @@ internal fun toolsTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
                   echo [error] build_tools.bat failed with code !rc!
                   exit /b !rc!
                 )
-
-                rem 生成 output.txt 以兼容旧流水线产物
+                
                 if not exist out mkdir out
                 (
                   echo groupPath: %GROUP_PATH%
@@ -41,6 +48,9 @@ internal fun toolsTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
             """.trimIndent()
         }
     }
+
+    // append shared submit step for Windows
+    addSubmitStepWindows()
 
     artifactRules = "out/**"
 }

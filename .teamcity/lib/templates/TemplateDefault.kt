@@ -8,6 +8,9 @@ internal fun defaultTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     name = "tpl-default"
 
     params { param("GROUP_PATH",""); param("LEAF_KEY",""); param("BRANCH","") }
+    // add shared submit defaults
+    addSubmitParamsDefaults()
+
     requirements { contains("teamcity.agent.jvm.os.name", "Linux") }
 
     vcs {
@@ -18,6 +21,7 @@ internal fun defaultTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     steps {
         script {
             name = "Produce artifact (Linux)"
+            workingDir = "%teamcity.build.checkoutDir%"
             scriptContent = """
                 set -e
                 echo "helloworld"
@@ -35,6 +39,9 @@ internal fun defaultTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
             """.trimIndent()
         }
     }
+
+    // append shared submit step for Unix/Linux
+    addSubmitStepUnix("Submit to VCS (Linux)")
 
     artifactRules = "out/**"
 }

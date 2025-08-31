@@ -8,6 +8,9 @@ internal fun clientIosTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     name = "tpl-client-ios"
 
     params { param("GROUP_PATH","" ); param("LEAF_KEY","" ); param("BRANCH","") }
+    // add shared submit defaults
+    addSubmitParamsDefaults()
+
     requirements { contains("teamcity.agent.jvm.os.name", "Mac") }
 
     vcs {
@@ -18,6 +21,7 @@ internal fun clientIosTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     steps {
         script {
             name = "Build ios (macOS)"
+            workingDir = "%teamcity.build.checkoutDir%"
             scriptContent = """
                 set -euo pipefail
                 bash codebase/buildscripts/build_ios.sh
@@ -33,6 +37,9 @@ internal fun clientIosTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
             """.trimIndent()
         }
     }
+
+    // append shared submit step for Unix/macOS
+    addSubmitStepUnix("Submit to VCS (macOS)")
 
     artifactRules = "out/**"
 }
