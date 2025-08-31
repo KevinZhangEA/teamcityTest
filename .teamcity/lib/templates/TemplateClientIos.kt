@@ -23,11 +23,9 @@ internal fun clientIosTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
                 
                 # 生成 output.txt 以兼容旧流水线产物
                 mkdir -p out
-                PROP_FILE="${'$'}{TEAMCITY_BUILD_PROPERTIES_FILE:-}"
-                val() { grep -E "^${'$'}1=" "${'$'}PROP_FILE" | sed -e "s/^${'$'}1=//" | head -n1 ; }
                 {
-                  echo "groupPath: $(val GROUP_PATH)"
-                  echo "leafKey:   $(val LEAF_KEY)"
+                  echo "groupPath: ${'$'}{GROUP_PATH}"
+                  echo "leafKey:   ${'$'}{LEAF_KEY}"
                   echo "platform:  ios"
                   date -u +%Y-%m-%dT%H:%M:%SZ
                 } > out/output.txt

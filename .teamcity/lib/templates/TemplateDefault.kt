@@ -22,17 +22,15 @@ internal fun defaultTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
                 set -e
                 echo "helloworld"
                 mkdir -p out
-                PROP_FILE="${'$'}{TEAMCITY_BUILD_PROPERTIES_FILE:-}"
-                val() { grep -E "^${'$'}1=" "${'$'}PROP_FILE" | sed -e "s/^${'$'}1=//" | head -n1 ; }
                 {
-                  echo "groupPath: $(val GROUP_PATH)"
-                  echo "leafKey:   $(val LEAF_KEY)"
-                  echo "buildConf: $(val teamcity.buildConfName)"
-                  echo "buildId:   $(val teamcity.build.id)"
-                  echo "buildNum:  $(val build.number)"
-                  echo "branch:    $(val teamcity.build.branch)"
-                  echo "agentName: $(val teamcity.agent.name)"
-                  echo "agentOs:   $(val teamcity.agent.jvm.os.name)"
+                  echo "groupPath: ${'$'}{GROUP_PATH}"
+                  echo "leafKey:   ${'$'}{LEAF_KEY}"
+                  echo "buildConf: ${'$'}{teamcity_buildConfName}"
+                  echo "buildId:   ${'$'}{teamcity_build_id}"
+                  echo "buildNum:  ${'$'}{build_number}"
+                  echo "branch:    ${'$'}{teamcity_build_branch}"
+                  echo "agentName: ${'$'}{teamcity_agent_name}"
+                  echo "agentOs:   ${'$'}{teamcity_agent.jvm.os.name}"
                   date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ
                 } > out/output.txt
             """.trimIndent()

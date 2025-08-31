@@ -22,11 +22,9 @@ internal fun serverTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
                 set -e
                 echo "helloworld (server)"
                 mkdir -p out
-                PROP_FILE="${'$'}{TEAMCITY_BUILD_PROPERTIES_FILE:-}"
-                val() { grep -E "^${'$'}1=" "${'$'}PROP_FILE" | sed -e "s/^${'$'}1=//" | head -n1 ; }
                 {
-                  echo "groupPath: $(val GROUP_PATH)"
-                  echo "leafKey:   $(val LEAF_KEY)"
+                  echo "groupPath: ${'$'}{GROUP_PATH}"
+                  echo "leafKey:   ${'$'}{LEAF_KEY}"
                   echo "role:      server"
                   date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ
                 } > out/output.txt

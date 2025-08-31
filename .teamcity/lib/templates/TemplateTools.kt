@@ -23,15 +23,9 @@ internal fun toolsTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
                 
                 rem 生成 output.txt 以兼容旧流水线产物
                 if not exist out mkdir out
-                setlocal enabledelayedexpansion
-                set PROP_FILE=%TEAMCITY_BUILD_PROPERTIES_FILE%
-                for /f "usebackq tokens=1,2 delims==" %%A in (`type !PROP_FILE!`) do (
-                  if "%%A"=="GROUP_PATH" set GROUP_PATH=%%B
-                  if "%%A"=="LEAF_KEY" set LEAF_KEY=%%B
-                )
                 (
-                  echo groupPath: !GROUP_PATH!
-                  echo leafKey:   !LEAF_KEY!
+                  echo groupPath: %GROUP_PATH%
+                  echo leafKey:   %LEAF_KEY%
                   echo category:  tools
                   powershell -Command "Get-Date -Format yyyy-MM-ddTHH:mm:ssZ"
                 ) > out/output.txt
