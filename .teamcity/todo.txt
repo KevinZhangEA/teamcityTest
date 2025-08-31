@@ -1,2 +1,5 @@
 TODOs:
+Add submit function in build jobs.
+BUGS:
 debug regular night build issue, need to check if it triggers properly.
+The entire build chain will stuck not fail if one of the build cannot get correct agent. For example, used an incorrect parameter.
