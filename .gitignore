@@ -1,3 +1,6 @@
 # Ignore Copilot and other IDE/tool state files
 copilotDiffState.xml
 .idea/copilotDiffState.xml
+
+# macOS system files
+.DS_Store
