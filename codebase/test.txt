@@ -1,9 +1,2 @@
-<<<<<<< HEAD
-nothing
-update
 This is a test file.
 haha
-=======
-This is a test file.
-haha
->>>>>>> origin/main
