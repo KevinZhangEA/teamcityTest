@@ -25,7 +25,6 @@ internal fun defaultTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
                 {
                   echo "groupPath: ${'$'}{GROUP_PATH}"
                   echo "leafKey:   ${'$'}{LEAF_KEY}"
-                  echo "buildConf: %teamcity.buildConfName%"
                   echo "buildId:   %teamcity.build.id%"
                   echo "buildNum:  %build.number%"
                   echo "branch:    %teamcity.build.branch%"
