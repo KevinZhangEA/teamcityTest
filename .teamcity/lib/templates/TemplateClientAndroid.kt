@@ -8,8 +8,8 @@ internal fun clientAndroidTemplateImpl(id: String, vcsRoot: VcsRoot) = Template 
     name = "tpl-client-android"
 
     params { param("GROUP_PATH",""); param("LEAF_KEY",""); param("BRANCH","")  }
-    requirements { contains("teamcity.agent.jvm.os.name", "Linux") }
-    
+    requirements { contains("teamcity.agent.jvm.os.name", "Windows") }
+
     vcs {
         root(vcsRoot)
         branchFilter = "+:%BRANCH%"
@@ -17,19 +17,22 @@ internal fun clientAndroidTemplateImpl(id: String, vcsRoot: VcsRoot) = Template 
     
     steps {
         script {
-            name = "Produce artifact (Linux)"
+            name = "Produce artifact (Windows)"
             scriptContent = """
-                set -e
-                echo "helloworld (android)"
-                mkdir -p out
-                PROP_FILE="${'$'}{TEAMCITY_BUILD_PROPERTIES_FILE:-}"
-                val() { grep -E "^${'$'}1=" "${'$'}PROP_FILE" | sed -e "s/^${'$'}1=//" | head -n1 ; }
-                {
-                  echo "groupPath: $(val GROUP_PATH)"
-                  echo "leafKey:   $(val LEAF_KEY)"
-                  echo "platform:  android"
-                  date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ
-                } > out/output.txt
+                echo helloworld (android)
+                mkdir out
+                setlocal enabledelayedexpansion
+                set PROP_FILE=%TEAMCITY_BUILD_PROPERTIES_FILE%
+                for /f "usebackq tokens=1,2 delims==" %%A in (`type !PROP_FILE!`) do (
+                  if "%%A"=="GROUP_PATH" set GROUP_PATH=%%B
+                  if "%%A"=="LEAF_KEY" set LEAF_KEY=%%B
+                )
+                (
+                  echo groupPath: !GROUP_PATH!
+                  echo leafKey:   !LEAF_KEY!
+                  echo platform:  android
+                  powershell -Command "Get-Date -Format yyyy-MM-ddTHH:mm:ssZ"
+                ) > out/output.txt
             """.trimIndent()
         }
     }

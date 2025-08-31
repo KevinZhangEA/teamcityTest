@@ -7,9 +7,9 @@ internal fun clientIosTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     this.id(id)
     name = "tpl-client-ios"
 
-    params { param("GROUP_PATH",""); param("LEAF_KEY",""); param("BRANCH","") }
-    requirements { contains("teamcity.agent.jvm.os.name", "Linux") }
-    
+    params { param("GROUP_PATH","" ); param("LEAF_KEY","" ); param("BRANCH","") }
+    requirements { contains("teamcity.agent.jvm.os.name", "Mac") }
+
     vcs {
         root(vcsRoot)
         branchFilter = "+:%BRANCH%"
@@ -17,7 +17,7 @@ internal fun clientIosTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     
     steps {
         script {
-            name = "Produce artifact (Linux)"
+            name = "Produce artifact (macOS)"
             scriptContent = """
                 set -e
                 echo "helloworld (ios)"
@@ -28,7 +28,7 @@ internal fun clientIosTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
                   echo "groupPath: $(val GROUP_PATH)"
                   echo "leafKey:   $(val LEAF_KEY)"
                   echo "platform:  ios"
-                  date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ
+                  date -u +%Y-%m-%dT%H:%M:%SZ
                 } > out/output.txt
             """.trimIndent()
         }
