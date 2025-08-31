@@ -1,2 +1,8 @@
 TODOs:
+Add submit function in build jobs.
+BUGS:
 debug regular night build issue, need to check if it triggers properly.
+The entire build chain will stuck not fail if one of the build cannot get correct agent. For example, used an incorrect parameter.
+ENTRANCE change log seems displayed changes in other branches
+The windows build issue looks like the script in template cannot call the bat file correctly. Need to check if the bat file is exists.
+Need to rollback the last change in branch1, the one added debug info in buildtool.bat
