@@ -23,10 +23,11 @@ internal fun serverTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
                 echo "helloworld (server)"
                 mkdir -p out
                 {
-                  echo "groupPath: ${'$'}{GROUP_PATH}"
-                  echo "leafKey:   ${'$'}{LEAF_KEY}"
+                  echo "groupPath: ${GROUP_PATH}"
+                  echo "leafKey:   ${LEAF_KEY}"
                   echo "role:      server"
-                  date -u +%%Y-%%m-%%dT%%H:%%M:%%SZ
+                  echo "agentOs:   ${teamcity_agent_jvm_os_name}"
+                  date -u +%Y-%m-%dT%H:%M:%SZ
                 } > out/output.txt
             """.trimIndent()
         }
