@@ -19,9 +19,15 @@ internal fun clientAndroidTemplateImpl(id: String, vcsRoot: VcsRoot) = Template 
         script {
             name = "Build android (Windows)"
             scriptContent = """
-                call codebase\buildscripts\build_android.bat
+                call codebase\buildscripts\build_tools.bat
+
+                set "rc=%errorlevel%"
+                echo [debug] build_tools.bat rc=%rc%
+                if not "%rc%"=="0" (
+                  echo [error] build_tools.bat failed with code %rc%
+                  exit /b %rc%
+                )
                 
-                rem 生成 output.txt 以兼容旧流水线产物
                 if not exist out mkdir out
                 (
                   echo groupPath: %GROUP_PATH%
