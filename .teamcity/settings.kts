@@ -13,14 +13,13 @@ project {
 
     // 在根项目预定义 UI 侧需要设置的参数占位（不提供值，便于在 UI 中集中设置）
     params {
-        // Perforce（如使用 P4，请在 UI 中配置这些环境参数与密码类型）
-        param("env.P4USER", "")
-        param("env.P4PORT", "")
-        // 密码参数名（值仅在 UI 中配置为 Password 类型）
-        param("secure.P4PASSWD", "")
+        // Perforce（全部使用 secure 参数占位，避免 DSL 覆盖 UI）
+        password("secure.P4USER", "")
+        password("secure.P4PORT", "")
+        password("secure.P4PASSWD", "")
     }
 
-    // 六套模板（指定各自的 P4 stream；如使用 Git，这些参数会被忽略）
+    // 六套模板（指定各自的 P4 stream）
     val tplDefault = defaultTemplate("${idp}_tpl_default", vcsRoot, "//streams/default")
     val tplCliIOS  = clientIosTemplate("${idp}_tpl_client_ios", vcsRoot, "//streams/client-ios")
     val tplCliAnd  = clientAndroidTemplate("${idp}_tpl_client_android", vcsRoot, "//streams/client-android")

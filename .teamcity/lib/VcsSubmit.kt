@@ -21,8 +21,9 @@ fun Template.addP4SubmitStepWindows(p4Stream: String) {
                   set "P4CLIENT=tc-%_agent%"
                   set "P4CLIENT=%P4CLIENT: =_%"
                 )
-                if defined P4USER  set "P4USER=%P4USER%"
-                if defined P4PORT   set "P4PORT=%P4PORT%"
+                rem Prefer secure parameters for P4USER/P4PORT; fallback to env vars if already set
+                if not defined P4USER set "P4USER=%secure.P4USER%"
+                if not defined P4PORT set "P4PORT=%secure.P4PORT%"
                 echo [vcs] P4 User: %P4USER%
                 echo [vcs] P4 Client: %P4CLIENT%
                 echo [vcs] P4 Port: %P4PORT%
@@ -86,8 +87,9 @@ fun Template.addP4SubmitStepUnix(stepName: String, p4Stream: String) {
                   P4CLIENT="tc-$(printf '%s' "${'$'}_agent" | tr -c 'A-Za-z0-9_-' '_')"
                   export P4CLIENT
                 fi
-                [ -n "${'$'}{P4USER:-}" ] && export P4USER || true
-                [ -n "${'$'}{P4PORT:-}" ] && export P4PORT   || true
+                # Prefer secure parameters for P4USER/P4PORT; fallback to existing env
+                export P4USER="${'$'}{P4USER:-%secure.P4USER%}"
+                export P4PORT="${'$'}{P4PORT:-%secure.P4PORT%}"
                 echo "[vcs] P4 User: ${'$'}{P4USER:-}"
                 echo "[vcs] P4 Client: ${'$'}{P4CLIENT}"
                 echo "[vcs] P4 Port: ${'$'}{P4PORT:-}"
