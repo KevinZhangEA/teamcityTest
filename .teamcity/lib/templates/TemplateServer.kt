@@ -26,7 +26,7 @@ internal fun serverTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
                   echo "groupPath: %GROUP_PATH%"
                   echo "leafKey:   %LEAF_KEY%"
                   echo "role:      server"
-                  date -u +%Y-%m-%dT%H:%M:%SZ
+                  date -u +"%%Y-%%m-%%dT%%H:%%M:%%SZ"
                 } > out/output.txt
             """.trimIndent()
         }
