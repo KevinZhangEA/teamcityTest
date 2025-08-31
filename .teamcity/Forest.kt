@@ -69,53 +69,8 @@ fun buildForestFromPaths(
         }
         prjBranch.buildType(dispatcher)
 
-        data class Built(val allLeaves: List<BuildType>, val fin: BuildType)
-
-        fun buildGroup(parent: Project, pathIds: List<String>, node: Node): Built {
-            val groupPathId = (pathIds + node.id).joinToString("_")
-            val prj = Project { id("${idp}_Prj_${branch}_$groupPathId"); name = node.name }
-            parent.subProject(prj)
-
-            val leaves = node.leaves.map { leafKey ->
-                BuildType().also { bt ->
-                    bt.id("${idp}_BT_${branch}_${groupPathId}_${safeId(leafKey)}")
-                    bt.name = "${branch}_${groupPathId}_$leafKey"
-                    bt.templates(pickTpl(groupPathId, leafKey, rules, defaultTpl))
-                    bt.params {
-                        param("GROUP_PATH", groupPathId)
-                        param("LEAF_KEY",   leafKey)
-                    }
-                    bt.dependencies {
-                        snapshot(dispatcher) { synchronizeRevisions = true }
-                    }
-                    prj.buildType(bt)
-                }
-            }
-
-            val kids = node.children.values.map { child ->
-                buildGroup(prj, pathIds + node.id, child)
-            }
-
-            val fin = BuildType {
-                id("${idp}_BT_${branch}_${groupPathId}_finalize")
-                name = "99_🏁 ${groupPathId}_finalize"
-                templates(pickTpl(groupPathId, null, rules, defaultTpl))
-                dependencies {
-                    leaves.forEach { ch ->
-                        snapshot(ch) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
-                        artifacts(ch) { artifactRules = "** => inputs/${ch.name}/" }
-                    }
-                    kids.forEach { b ->
-                        snapshot(b.fin) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
-                        artifacts(b.fin) { artifactRules = "** => inputs/${b.fin.name}/" }
-                    }
-                }
-            }
-            prj.buildType(fin)
-            return Built(leaves + kids.flatMap { it.allLeaves }, fin)
-        }
-
-        val builtRoots = roots.values.map { buildGroup(prjBranch, emptyList(), it) }
+        // 优化：buildGroup 移到 ForestUtils.kt
+        val builtRoots = roots.values.map { buildGroup(prjBranch, emptyList(), it, idp, branch, dispatcher, rules, defaultTpl) }
 
         composite.dependencies {
             snapshot(dispatcher) { synchronizeRevisions = true }
@@ -126,3 +81,4 @@ fun buildForestFromPaths(
         }
     }
 }
+

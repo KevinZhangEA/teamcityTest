@@ -1,6 +1,7 @@
 import jetbrains.buildServer.configs.kotlin.*
 import lib.*
 import lib.TemplateRule as R
+import lib.buildForestFromPaths
 
 version = "2025.07"
 

@@ -1,6 +1,6 @@
 package lib
 
-import jetbrains.buildServer.configs.kotlin.Template
+import jetbrains.buildServer.configs.kotlin.*
 
 data class TemplateRule(val pattern: String, val template: Template)
 
@@ -11,9 +11,62 @@ data class Node(
     val leaves: MutableList<String> = mutableListOf()
 )
 
-fun safeId(s: String): String {
-    val t = s.replace(Regex("[^A-Za-z0-9_]"), "_")
-    return if (t.firstOrNull()?.isLetter() == true) t else "X_$t"
+data class Built(val allLeaves: List<BuildType>, val fin: BuildType)
+
+/**
+ * 递归构建组和叶子节点
+ */
+fun buildGroup(
+    parent: Project,
+    pathIds: List<String>,
+    node: Node,
+    idp: String,
+    branch: String,
+    dispatcher: BuildType,
+    rules: List<TemplateRule>,
+    defaultTpl: Template
+): Built {
+    val groupPathId = (pathIds + node.id).joinToString("_")
+    val prj = Project { id("${idp}_Prj_${branch}_$groupPathId"); name = node.name }
+    parent.subProject(prj)
+
+    val leaves = node.leaves.map { leafKey ->
+        BuildType().also { bt ->
+            bt.id("${idp}_BT_${branch}_${groupPathId}_${safeId(leafKey)}")
+            bt.name = "${branch}_${groupPathId}_$leafKey"
+            bt.templates(pickTpl(groupPathId, leafKey, rules, defaultTpl))
+            bt.params {
+                param("GROUP_PATH", groupPathId)
+                param("LEAF_KEY",   leafKey)
+            }
+            bt.dependencies {
+                snapshot(dispatcher) { synchronizeRevisions = true }
+            }
+            prj.buildType(bt)
+        }
+    }
+
+    val kids = node.children.values.map { child ->
+        buildGroup(prj, pathIds + node.id, child, idp, branch, dispatcher, rules, defaultTpl)
+    }
+
+    val fin = BuildType {
+        id("${idp}_BT_${branch}_${groupPathId}_finalize")
+        name = "99_🏁 ${groupPathId}_finalize"
+        templates(pickTpl(groupPathId, null, rules, defaultTpl))
+        dependencies {
+            leaves.forEach { ch ->
+                snapshot(ch) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
+                artifacts(ch) { artifactRules = "** => inputs/${ch.name}/" }
+            }
+            kids.forEach { b ->
+                snapshot(b.fin) { synchronizeRevisions = true; onDependencyFailure = FailureAction.ADD_PROBLEM }
+                artifacts(b.fin) { artifactRules = "** => inputs/${b.fin.name}/" }
+            }
+        }
+    }
+    prj.buildType(fin)
+    return Built(leaves + kids.flatMap { it.allLeaves }, fin)
 }
 
 // 极简 glob：支持 "**"（跨段）与 "*"（单段）
@@ -63,3 +116,7 @@ fun pickTpl(
     return rules.firstOrNull { globMatch(it.pattern, logical) }?.template ?: defaultTpl
 }
 
+fun safeId(s: String): String {
+    val t = s.replace(Regex("[^A-Za-z0-9_]"), "_")
+    return if (t.firstOrNull()?.isLetter() == true) t else "X_$t"
+}
