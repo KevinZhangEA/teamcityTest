@@ -33,7 +33,7 @@ project {
         // tools
         "tools/tools", "tools/tools1", "tools/tools2", "tools/tools3",
         // assets
-        "assets/scripts", "assets/players", "assets/stadium", "assets/cinamatics",
+        "assets/scripts", "assets/players", "assets/stadium", "assets/cinematics",
         "assets/audio", "assets/designconfigs",
         // assets/ui
         "assets/ui/textures", "assets/ui/layouts", "assets/ui/localization", "assets/ui/fonts", "assets/ui/videos"
