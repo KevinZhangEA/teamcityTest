@@ -1,6 +1,5 @@
 TODOs:
-[HIGH] Add submit function in build jobs.
-[HIGH] check how to us checkout rules and configure them in template.
+[HIGH] [WIP] Add submit function in build jobs.
 
 
 
