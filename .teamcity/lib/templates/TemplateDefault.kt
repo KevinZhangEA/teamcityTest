@@ -31,7 +31,7 @@ internal fun defaultTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
                   echo "branch:    %teamcity.build.branch%"
                   echo "agentName: %teamcity.agent.name%"
                   echo "agentOs:   %teamcity.agent.jvm.os.name%"
-                  date -u +%Y-%m-%dT%H:%M:%SZ
+                  date -u +"%%Y-%%m-%%dT%%H:%%M:%%SZ"
                 } > out/output.txt
             """.trimIndent()
         }
