@@ -4,7 +4,7 @@ import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 import lib.*
 
-internal fun serverTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String? = null) = Template {
+internal fun serverTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String) = Template {
     this.id(id)
     name = "tpl-server"
 
@@ -13,8 +13,6 @@ internal fun serverTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String? 
         param("LEAF_KEY","")
         param("BRANCH","")
     }
-    // add shared VCS defaults with VCS root auto-detection
-    addVcsParamsDefaults(vcsRoot)
 
     requirements { contains("teamcity.agent.jvm.os.name", "Linux") }
 
@@ -42,8 +40,8 @@ internal fun serverTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String? 
         }
     }
 
-    // append shared VCS submit step for Unix/Linux
-    addVcsSubmitStepUnix(VcsConfig.StepNames.LINUX, p4Stream)
+    // append P4 submit step for Unix/Linux
+    addP4SubmitStepUnix(VcsConfig.StepNames.LINUX, p4Stream)
 
     artifactRules = "out/**"
 }

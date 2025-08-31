@@ -18,10 +18,6 @@ project {
         param("env.P4PORT", "")
         // 密码参数名（值仅在 UI 中配置为 Password 类型）
         param("secure.P4PASSWD", "")
-        // Git（可选项：如果要 push 回 Git）
-        param("env.GIT_USER_EMAIL", "")
-        param("env.GIT_USER_NAME", "")
-        param("env.GIT_PUSH_URL", "")
     }
 
     // 六套模板（指定各自的 P4 stream；如使用 Git，这些参数会被忽略）

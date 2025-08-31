@@ -3,6 +3,7 @@ package lib.templates
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 import lib.*
+import lib.addP4SubmitStepUnix
 
 internal fun defaultTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String? = null) = Template {
     this.id(id)

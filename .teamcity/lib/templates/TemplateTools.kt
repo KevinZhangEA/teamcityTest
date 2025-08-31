@@ -4,13 +4,11 @@ import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 import lib.*
 
-internal fun toolsTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String? = null) = Template {
+internal fun toolsTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String) = Template {
     this.id(id)
     name = "tpl-tools"
 
     params { param("GROUP_PATH","" ); param("LEAF_KEY","" ); param("BRANCH","" ) }
-    // add shared VCS defaults with VCS root auto-detection
-    addVcsParamsDefaults(vcsRoot)
 
     requirements { contains("teamcity.agent.jvm.os.name", "Windows") }
 
@@ -50,8 +48,8 @@ internal fun toolsTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String? =
         }
     }
 
-    // append shared VCS submit step for Windows
-    addVcsSubmitStepWindows(p4Stream)
+    // append P4 submit step for Windows
+    addP4SubmitStepWindows(p4Stream)
 
     artifactRules = "out/**"
 }
