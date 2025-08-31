@@ -27,6 +27,7 @@ internal fun clientIosTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
                   echo "groupPath: ${'$'}{GROUP_PATH}"
                   echo "leafKey:   ${'$'}{LEAF_KEY}"
                   echo "platform:  ios"
+                  echo "agentOs:   ${'$'}{teamcity_agent_jvm_os_name}"
                   date -u +%Y-%m-%dT%H:%M:%SZ
                 } > out/output.txt
             """.trimIndent()
