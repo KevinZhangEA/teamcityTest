@@ -1,4 +1,4 @@
-package lib.templates
+package lib
 
 /**
  * Submit configuration settings
@@ -35,6 +35,10 @@ object SubmitConfig {
 
     // Perforce配置
     object Perforce {
+        // P4用户配置
+        const val DEFAULT_USER = "buildbot"
+        const val DEFAULT_CLIENT = "teamcity-client"
+
         // P4提交描述模板
         const val SUBMIT_DESCRIPTION_TEMPLATE = "chore: submit artifacts for %build.number% [%GROUP_PATH%/%LEAF_KEY%]"
 
@@ -67,11 +71,20 @@ object SubmitConfig {
 
     // 环境变量名称
     object EnvVars {
+        // Git 环境变量
         const val GIT_USER_EMAIL = "GIT_USER_EMAIL"
         const val GIT_USER_NAME = "GIT_USER_NAME"
         const val GIT_PUSH_URL = "GIT_PUSH_URL"
+
+        // Perforce 环境变量
+        const val P4_USER = "P4USER"
+        const val P4_CLIENT = "P4CLIENT"
+        const val P4_PORT = "P4PORT"
+        const val P4_PASSWD = "P4PASSWD"
+
+        // 通用环境变量
         const val SUBMIT = "SUBMIT"
-        const val VCS_TYPE = "VCS_TYPE"  // 新增：用于传递检测到的 VCS 类型
+        const val VCS_TYPE = "VCS_TYPE"
         const val GROUP_PATH = "GROUP_PATH"
         const val LEAF_KEY = "LEAF_KEY"
         const val BUILD_NUMBER = "build.number"

@@ -2,14 +2,19 @@ package lib.templates
 
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
+import lib.*
 
 internal fun defaultTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     this.id(id)
     name = "tpl-default"
 
-    params { param("GROUP_PATH",""); param("LEAF_KEY",""); param("BRANCH","") }
-    // add shared submit defaults with VCS root auto-detection
-    addSubmitParamsDefaults(vcsRoot)
+    params {
+        param("GROUP_PATH","")
+        param("LEAF_KEY","")
+        param("BRANCH","")
+    }
+    // add shared VCS defaults with VCS root auto-detection
+    addVcsParamsDefaults(vcsRoot)
 
     requirements { contains("teamcity.agent.jvm.os.name", "Linux") }
 
@@ -40,8 +45,8 @@ internal fun defaultTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
         }
     }
 
-    // append shared submit step for Unix/Linux
-    addSubmitStepUnix("Submit to VCS (Linux)")
+    // append shared VCS submit step for Unix/Linux
+    addVcsSubmitStepUnix("VCS Submit (Linux)")
 
     artifactRules = "out/**"
 }
