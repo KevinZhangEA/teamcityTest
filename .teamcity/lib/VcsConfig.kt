@@ -35,10 +35,6 @@ object VcsConfig {
         const val CHECK_COMMAND = "p4"
         const val RECONCILE_FLAGS = "-a -e -d ."
         const val OPENED_CHECK_FLAGS = "-m1"
-
-        // 安全相关配置
-        const val USE_TICKET_AUTH = true  // 优先使用 ticket 认证而不是密码
-        const val P4_TICKETS_FILE = ".p4tickets"  // ticket 文件路径
     }
 
     // 步骤名称配置
@@ -58,29 +54,12 @@ object VcsConfig {
         const val P4_RECONCILE_FAILED = "[vcs] p4 reconcile failed, skip."
         const val P4_SUBMIT_FAILED = "[vcs] p4 submit failed, skip."
         const val VCS_AUTO_DETECTED = "[vcs] VCS auto-detected: %s"
-        const val P4_AUTH_INFO = "[vcs] P4 authentication configured (details hidden for security)"
-        const val P4_AUTH_WARNING = "[vcs] Warning: No P4 authentication configured"
     }
 
     // 环境变量名称
     object EnvVars {
-        // Git 环境变量
-        const val GIT_USER_EMAIL = "GIT_USER_EMAIL"
-        const val GIT_USER_NAME = "GIT_USER_NAME"
-        const val GIT_PUSH_URL = "GIT_PUSH_URL"
-
-        // Perforce 环境变量
-        const val P4_USER = "P4USER"
-        const val P4_CLIENT = "P4CLIENT"
-        const val P4_PORT = "P4PORT"
-        const val P4_PASSWD = "P4PASSWD"  // 敏感信息，建议使用 TeamCity 密码参数
-        const val P4_TICKET = "P4TICKET"  // 更安全的认证方式
-
         // 通用环境变量
         const val VCS_SUBMIT = "VCS_SUBMIT"
         const val VCS_TYPE = "VCS_TYPE"
-        const val GROUP_PATH = "GROUP_PATH"
-        const val LEAF_KEY = "LEAF_KEY"
-        const val BUILD_NUMBER = "build.number"
     }
 }
