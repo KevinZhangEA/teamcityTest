@@ -40,7 +40,7 @@ internal fun clientIosTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     }
 
     // append shared VCS submit step for Unix/macOS
-    addVcsSubmitStepUnix("VCS Submit (macOS)")
+    addVcsSubmitStepUnix(VcsConfig.StepNames.MACOS)
 
     artifactRules = "out/**"
 }

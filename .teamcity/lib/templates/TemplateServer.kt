@@ -43,7 +43,7 @@ internal fun serverTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     }
 
     // append shared VCS submit step for Unix/Linux
-    addVcsSubmitStepUnix("VCS Submit (Linux)")
+    addVcsSubmitStepUnix(VcsConfig.StepNames.LINUX)
 
     artifactRules = "out/**"
 }
