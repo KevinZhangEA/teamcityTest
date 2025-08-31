@@ -21,7 +21,7 @@ internal fun toolsTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
             scriptContent = """
                 setlocal EnableDelayedExpansion
                 
-                rem call codebase\buildscripts\build_tools.bat
+                call codebase\buildscripts\build_tools.bat
 
                 set rc=!errorlevel!
                 echo [debug] build_tools.bat rc=!rc!

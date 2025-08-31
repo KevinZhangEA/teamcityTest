@@ -19,9 +19,10 @@ internal fun clientAndroidTemplateImpl(id: String, vcsRoot: VcsRoot) = Template 
         script {
             name = "Build android (Windows)"
             scriptContent = """
+                setlocal EnableDelayedExpansion
+                
                 call codebase\buildscripts\build_tools.bat
 
-                setlocal EnableDelayedExpansion
                 set rc=!errorlevel!
                 echo [debug] build_tools.bat rc=!rc!
                 if not "!rc!"=="0" (
