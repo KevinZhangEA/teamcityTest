@@ -1,3 +1,3 @@
 # Ignore Copilot and other IDE/tool state files
-copilotdiffstate.xml
-
+copilotDiffState.xml
+.idea/copilotDiffState.xml
