@@ -17,10 +17,11 @@ internal fun clientIosTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     
     steps {
         script {
-            name = "Produce artifact (macOS)"
+            name = "Build ios (macOS)"
             scriptContent = """
-                set -e
-                echo "helloworld (ios)"
+                bash codebase/buildscripts/build_ios.sh
+                
+                # 生成 output.txt 以兼容旧流水线产物
                 mkdir -p out
                 PROP_FILE="${'$'}{TEAMCITY_BUILD_PROPERTIES_FILE:-}"
                 val() { grep -E "^${'$'}1=" "${'$'}PROP_FILE" | sed -e "s/^${'$'}1=//" | head -n1 ; }

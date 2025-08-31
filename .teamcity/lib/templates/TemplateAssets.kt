@@ -15,10 +15,12 @@ internal fun assetsTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     }
     steps {
         script {
-            name = "Produce artifact (Windows)"
+            name = "Build assets (Windows)"
             scriptContent = """
-                echo helloworld (assets)
-                mkdir out
+                call codebase\buildscripts\build_assets.bat
+                
+                rem 生成 output.txt 以兼容旧流水线产物
+                if not exist out mkdir out
                 setlocal enabledelayedexpansion
                 set PROP_FILE=%TEAMCITY_BUILD_PROPERTIES_FILE%
                 for /f "usebackq tokens=1,2 delims==" %%A in (`type !PROP_FILE!`) do (
