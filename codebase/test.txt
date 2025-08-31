@@ -1,3 +1,9 @@
+<<<<<<< HEAD
 nothing
 update
-trigger a build.
+This is a test file.
+haha
+=======
+This is a test file.
+haha
+>>>>>>> origin/main
