@@ -27,7 +27,7 @@ internal fun toolsTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
                   echo groupPath: %GROUP_PATH%
                   echo leafKey:   %LEAF_KEY%
                   echo category:  tools
-                  echo time:      %date% %time%
+                  echo time:      %%date%% %%time%%
                 ) > out/output.txt
             """.trimIndent()
         }
