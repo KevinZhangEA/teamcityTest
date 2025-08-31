@@ -5,11 +5,6 @@ package lib
  * 将VCS相关的配置从代码中抽出来，便于管理和修改
  */
 object VcsConfig {
-    // 默认参数配置
-    object Defaults {
-        const val VCS_SUBMIT = "false"
-    }
-
     // VCS 类型检测
     object VcsDetection {
         const val GIT_VCS_TYPE = "jetbrains.buildServer.configs.kotlin.vcs.GitVcsRoot"
@@ -26,11 +21,8 @@ object VcsConfig {
         val TRACKED_PATHS = listOf("out", "placeholder.out")
     }
 
-    // Perforce配置
+    // Perforce配置（凭据需从 UI 参数提供：env.P4USER/env.P4CLIENT/env.P4PORT 和 secure.P4PASSWD）
     object Perforce {
-        const val DEFAULT_USER = "buildbot"
-        const val DEFAULT_CLIENT = "teamcity-client"
-        const val DEFAULT_PORT = "perforce:1666"
         const val SUBMIT_DESCRIPTION_TEMPLATE = "chore: submit artifacts for %build.number% [%GROUP_PATH%/%LEAF_KEY%]"
         const val CHECK_COMMAND = "p4"
         const val RECONCILE_FLAGS = "-a -e -d ."
@@ -46,7 +38,6 @@ object VcsConfig {
 
     // 消息配置
     object Messages {
-        const val VCS_SUBMIT_DISABLED = "[vcs] VCS_SUBMIT!=true, skip."
         const val GIT_NOT_FOUND = "[vcs] git not found, skip."
         const val P4_NOT_FOUND = "[vcs] p4 not found, skip."
         const val NOTHING_TO_COMMIT = "[vcs] nothing to commit."
@@ -58,8 +49,7 @@ object VcsConfig {
 
     // 环境变量名称
     object EnvVars {
-        // 通用环境变量
-        const val VCS_SUBMIT = "VCS_SUBMIT"
+        // 检测到的 VCS 类型（git/perforce）
         const val VCS_TYPE = "VCS_TYPE"
     }
 }

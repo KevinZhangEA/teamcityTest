@@ -5,12 +5,11 @@ import jetbrains.buildServer.configs.kotlin.Template
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 
 /**
- * Shared helpers to attach a gated "VCS Submit" step to templates.
+ * Shared helpers to attach a "VCS Submit" step to templates.
  * 根据 VCS root 类型自动检测使用 Git 还是 Perforce
- * Controlled by params:
- *  - VCS_SUBMIT: true/false (default false)
- * Optional env params for Git: GIT_USER_EMAIL, GIT_USER_NAME, GIT_PUSH_URL
- * Optional env params for Perforce: P4USER, P4CLIENT, P4PORT, P4PASSWD, P4TICKET
+ * UI parameters to use:
+ *  - Git: env.GIT_USER_EMAIL, env.GIT_USER_NAME, env.GIT_PUSH_URL (optional)
+ *  - Perforce: env.P4USER, env.P4CLIENT, env.P4PORT, secure.P4PASSWD
  */
 
 /**
@@ -21,7 +20,6 @@ fun detectVcsType(vcsRoot: VcsRoot): String {
         VcsConfig.VcsDetection.GIT_VCS_TYPE -> "git"
         VcsConfig.VcsDetection.PERFORCE_VCS_TYPE -> "perforce"
         else -> {
-            // 尝试通过类名包含关键字来检测
             val className = vcsRoot::class.java.simpleName.lowercase()
             when {
                 className.contains("git") -> "git"
@@ -46,10 +44,6 @@ fun Template.addVcsSubmitStepWindows() {
             workingDir = "%teamcity.build.checkoutDir%"
             scriptContent = """
                 setlocal EnableExtensions EnableDelayedExpansion
-                if /I not "%${VcsConfig.EnvVars.VCS_SUBMIT}%"=="true" (
-                  echo ${VcsConfig.Messages.VCS_SUBMIT_DISABLED}
-                  exit /b 0
-                )
                 set "_vcs=%${VcsConfig.EnvVars.VCS_TYPE}%"
                 echo ${VcsConfig.Messages.VCS_AUTO_DETECTED.replace("%s", "%_vcs%")}
                 if /I "%_vcs%"=="git" (
@@ -69,13 +63,11 @@ fun Template.addVcsSubmitStepWindows() {
                   )
                 ) else if /I "%_vcs%"=="perforce" (
                   where ${VcsConfig.Perforce.CHECK_COMMAND} >nul 2>&1 || ( echo ${VcsConfig.Messages.P4_NOT_FOUND} & exit /b 0 )
-                  if not defined P4USER set "P4USER=${VcsConfig.Perforce.DEFAULT_USER}"
-                  if not defined P4CLIENT set "P4CLIENT=${VcsConfig.Perforce.DEFAULT_CLIENT}"
-                  if not defined P4PORT set "P4PORT=${VcsConfig.Perforce.DEFAULT_PORT}"
-                  echo [vcs] P4 User: %P4USER%
-                  echo [vcs] P4 Client: %P4CLIENT%
-                  echo [vcs] P4 Port: %P4PORT%
-                  rem Login if needed using TeamCity password parameter first; fallback to env var
+                  rem Export Perforce context from environment if provided (must be set in UI parameters)
+                  if defined P4USER  set "P4USER=%P4USER%"
+                  if defined P4CLIENT set "P4CLIENT=%P4CLIENT%"
+                  if defined P4PORT   set "P4PORT=%P4PORT%"
+                  rem Login using TeamCity secured password parameter; fallback to env P4PASSWD if present
                   p4 login -s >nul 2>&1
                   if errorlevel 1 (
                     (echo %secure.P4PASSWD%) | p4 login -a >nul 2>&1
@@ -111,7 +103,6 @@ fun Template.addVcsSubmitStepUnix(stepName: String) {
             workingDir = "%teamcity.build.checkoutDir%"
             scriptContent = """
                 set -euo pipefail
-                if [ "%${VcsConfig.EnvVars.VCS_SUBMIT}%" != "true" ]; then echo "${VcsConfig.Messages.VCS_SUBMIT_DISABLED}"; exit 0; fi
                 _vcs="%${VcsConfig.EnvVars.VCS_TYPE}%"
                 echo "${VcsConfig.Messages.VCS_AUTO_DETECTED.replace("%s", "${'$'}_vcs") }"
                 case "${'$'}_vcs" in
@@ -131,9 +122,11 @@ fun Template.addVcsSubmitStepUnix(stepName: String) {
                     ;;
                   perforce)
                     if ! command -v ${VcsConfig.Perforce.CHECK_COMMAND} >/dev/null 2>&1; then echo "${VcsConfig.Messages.P4_NOT_FOUND}"; exit 0; fi
-                    export P4USER="${'$'}{P4USER:-${VcsConfig.Perforce.DEFAULT_USER}}"
-                    export P4CLIENT="${'$'}{P4CLIENT:-${VcsConfig.Perforce.DEFAULT_CLIENT}}"
-                    export P4PORT="${'$'}{P4PORT:-${VcsConfig.Perforce.DEFAULT_PORT}}"
+                    # Export Perforce context from environment if provided (must be set in UI parameters)
+                    [ -n "${'$'}{P4USER:-}" ] && export P4USER || true
+                    [ -n "${'$'}{P4CLIENT:-}" ] && export P4CLIENT || true
+                    [ -n "${'$'}{P4PORT:-}" ] && export P4PORT   || true
+                    # Login using TeamCity secured password parameter; fallback to env P4PASSWD if present
                     if ! p4 login -s >/dev/null 2>&1; then
                       printf '%s' "%secure.P4PASSWD%" | p4 login -a >/dev/null 2>&1 || true
                       if [ -n "${'$'}{P4PASSWD:-}" ]; then

@@ -13,7 +13,7 @@ project {
 
     // 在根项目预定义 UI 侧需要设置的参数占位（不提供值，便于在 UI 中集中设置）
     params {
-        // Perforce（可选项：如果使用 P4）
+        // Perforce（如使用 P4，请在 UI 中配置这些环境参数与密码类型）
         param("env.P4USER", "")
         param("env.P4CLIENT", "")
         param("env.P4PORT", "")
@@ -23,8 +23,6 @@ project {
         param("env.GIT_USER_EMAIL", "")
         param("env.GIT_USER_NAME", "")
         param("env.GIT_PUSH_URL", "")
-        // 提交开关（默认关闭，可在 UI 中按需打开）
-        param("VCS_SUBMIT", "false")
     }
 
     // 六套模板（Linux）
