@@ -15,7 +15,6 @@ project {
     params {
         // Perforce（如使用 P4，请在 UI 中配置这些环境参数与密码类型）
         param("env.P4USER", "")
-        param("env.P4CLIENT", "")
         param("env.P4PORT", "")
         // 密码参数名（值仅在 UI 中配置为 Password 类型）
         param("secure.P4PASSWD", "")
@@ -25,13 +24,13 @@ project {
         param("env.GIT_PUSH_URL", "")
     }
 
-    // 六套模板（Linux）
-    val tplDefault = defaultTemplate("${idp}_tpl_default", vcsRoot)
-    val tplCliIOS  = clientIosTemplate("${idp}_tpl_client_ios", vcsRoot)
-    val tplCliAnd  = clientAndroidTemplate("${idp}_tpl_client_android", vcsRoot)
-    val tplServer  = serverTemplate("${idp}_tpl_server", vcsRoot)
-    val tplTools   = toolsTemplate("${idp}_tpl_tools", vcsRoot)
-    val tplAssets  = assetsTemplate("${idp}_tpl_assets", vcsRoot)
+    // 六套模板（指定各自的 P4 stream；如使用 Git，这些参数会被忽略）
+    val tplDefault = defaultTemplate("${idp}_tpl_default", vcsRoot, "//streams/default")
+    val tplCliIOS  = clientIosTemplate("${idp}_tpl_client_ios", vcsRoot, "//streams/client-ios")
+    val tplCliAnd  = clientAndroidTemplate("${idp}_tpl_client_android", vcsRoot, "//streams/client-android")
+    val tplServer  = serverTemplate("${idp}_tpl_server", vcsRoot, "//streams/server")
+    val tplTools   = toolsTemplate("${idp}_tpl_tools", vcsRoot, "//streams/tools")
+    val tplAssets  = assetsTemplate("${idp}_tpl_assets", vcsRoot, "//streams/assets")
 
     // 注册模板
     listOf(tplDefault, tplCliIOS, tplCliAnd, tplServer, tplTools, tplAssets).forEach { template(it) }

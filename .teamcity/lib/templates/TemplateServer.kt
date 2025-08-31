@@ -4,7 +4,7 @@ import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 import lib.*
 
-internal fun serverTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
+internal fun serverTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String? = null) = Template {
     this.id(id)
     name = "tpl-server"
 
@@ -43,7 +43,7 @@ internal fun serverTemplateImpl(id: String, vcsRoot: VcsRoot) = Template {
     }
 
     // append shared VCS submit step for Unix/Linux
-    addVcsSubmitStepUnix(VcsConfig.StepNames.LINUX)
+    addVcsSubmitStepUnix(VcsConfig.StepNames.LINUX, p4Stream)
 
     artifactRules = "out/**"
 }
