@@ -21,7 +21,7 @@ internal fun clientAndroidTemplateImpl(id: String, vcsRoot: VcsRoot) = Template 
             scriptContent = """
                 call codebase\buildscripts\build_tools.bat
 
-                set "rc=%errorlevel%"
+                set "rc=%%errorlevel%%"
                 echo [debug] build_tools.bat rc=%rc%
                 if not "%rc%"=="0" (
                   echo [error] build_tools.bat failed with code %rc%
