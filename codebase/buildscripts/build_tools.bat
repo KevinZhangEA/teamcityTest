@@ -2,7 +2,9 @@
 setlocal
 for %%F in (%~nx0) do set "_script_name=%%~nF"
 call "%~dp0_build_common.bat" start %_script_name%
+echo start common %ERROR_LEVEL%
 call "%~dp0env.bat"
+echo env %ERROR_LEVEL%
 
 rem 简化生成 placeholder.out，内容为 build number
 if defined BUILD_NUMBER (
@@ -10,6 +12,7 @@ if defined BUILD_NUMBER (
 ) else (
   echo unknown > placeholder.out
 )
-
+echo build_number %ERROR_LEVEL%
 call "%~dp0_build_common.bat" end %_script_name%
+echo end common %ERROR_LEVEL%
 endlocal
