@@ -1,6 +1,6 @@
 import jetbrains.buildServer.configs.kotlin.*
-import lib.configureAdminProject
-import lib.configureMainProject
+import lib.configureProjectsByClassNames
+import projects.ProjectList
 
 version = "2025.07"
 
@@ -12,6 +12,6 @@ project {
         password("secure.P4PASSWD", "")
     }
 
-    configureAdminProject(this)
-    configureMainProject(this)
+    // Configure desired projects from the central list
+    configureProjectsByClassNames(this, ProjectList.enabled)
 }
