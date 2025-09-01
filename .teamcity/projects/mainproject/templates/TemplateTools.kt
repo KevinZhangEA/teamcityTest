@@ -53,3 +53,11 @@ internal fun toolsTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String) =
 
     artifactRules = "out/**"
 }
+
+// Provider for registry-based template lookup
+@Suppress("unused")
+object ToolsTemplateProvider : TemplateProvider {
+    override val key: String = "tools"
+    override fun create(id: String, vcsRoot: VcsRoot, p4Stream: String): Template =
+        toolsTemplateImpl(id, vcsRoot, p4Stream)
+}

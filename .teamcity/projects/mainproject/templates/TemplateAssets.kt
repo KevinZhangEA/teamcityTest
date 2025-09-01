@@ -50,3 +50,11 @@ internal fun assetsTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String) 
 
     artifactRules = "out/**"
 }
+
+// Provider for registry-based template lookup
+@Suppress("unused")
+object AssetsTemplateProvider : TemplateProvider {
+    override val key: String = "assets"
+    override fun create(id: String, vcsRoot: VcsRoot, p4Stream: String): Template =
+        assetsTemplateImpl(id, vcsRoot, p4Stream)
+}

@@ -50,3 +50,11 @@ internal fun clientAndroidTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: S
 
     artifactRules = "out/**"
 }
+
+// Provider for registry-based template lookup
+@Suppress("unused")
+object ClientAndroidTemplateProvider : TemplateProvider {
+    override val key: String = "client-android"
+    override fun create(id: String, vcsRoot: VcsRoot, p4Stream: String): Template =
+        clientAndroidTemplateImpl(id, vcsRoot, p4Stream)
+}

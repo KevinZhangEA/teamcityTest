@@ -5,12 +5,8 @@ import jetbrains.buildServer.configs.kotlin.Project
 import lib.ProjectConfigurator
 import lib.ProjectRegistry
 import lib.buildForestFromPaths
-import lib.clientAndroidTemplate
-import lib.clientIosTemplate
-import lib.defaultTemplate
-import lib.serverTemplate
-import lib.toolsTemplate
-import lib.assetsTemplate
+import lib.TemplateRegistry
+import projects.mainproject.templates.TemplateList
 import lib.TemplateRule as R
 
 object Configurator : ProjectConfigurator {
@@ -18,12 +14,17 @@ object Configurator : ProjectConfigurator {
     override fun configure(root: Project) {
         val idp = "v2"
         val vcsRoot = DslContext.settingsRoot
-        val tplDefault = defaultTemplate("${idp}_tpl_default", vcsRoot, "//streams/default")
-        val tplCliIOS  = clientIosTemplate("${idp}_tpl_client_ios", vcsRoot, "//streams/client-ios")
-        val tplCliAnd  = clientAndroidTemplate("${idp}_tpl_client_android", vcsRoot, "//streams/client-android")
-        val tplServer  = serverTemplate("${idp}_tpl_server", vcsRoot, "//streams/server")
-        val tplTools   = toolsTemplate("${idp}_tpl_tools", vcsRoot, "//streams/tools")
-        val tplAssets  = assetsTemplate("${idp}_tpl_assets", vcsRoot, "//streams/assets")
+
+        // Ensure mainproject template providers are loaded locally
+        TemplateRegistry.loadProvidersByClassNames(TemplateList.enabled)
+
+        // Create templates via registry by key
+        val tplDefault = TemplateRegistry.get("default").create("${idp}_tpl_default", vcsRoot, "//streams/default")
+        val tplCliIOS  = TemplateRegistry.get("client-ios").create("${idp}_tpl_client_ios", vcsRoot, "//streams/client-ios")
+        val tplCliAnd  = TemplateRegistry.get("client-android").create("${idp}_tpl_client_android", vcsRoot, "//streams/client-android")
+        val tplServer  = TemplateRegistry.get("server").create("${idp}_tpl_server", vcsRoot, "//streams/server")
+        val tplTools   = TemplateRegistry.get("tools").create("${idp}_tpl_tools", vcsRoot, "//streams/tools")
+        val tplAssets  = TemplateRegistry.get("assets").create("${idp}_tpl_assets", vcsRoot, "//streams/assets")
         listOf(tplDefault, tplCliIOS, tplCliAnd, tplServer, tplTools, tplAssets).forEach { root.template(it) }
 
         data class ProjCfg(

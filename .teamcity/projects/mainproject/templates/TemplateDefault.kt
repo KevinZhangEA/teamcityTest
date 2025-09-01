@@ -49,3 +49,11 @@ internal fun defaultTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String)
 
     artifactRules = "out/**"
 }
+
+// Provider for registry-based template lookup
+@Suppress("unused")
+object DefaultTemplateProvider : TemplateProvider {
+    override val key: String = "default"
+    override fun create(id: String, vcsRoot: VcsRoot, p4Stream: String): Template =
+        defaultTemplateImpl(id, vcsRoot, p4Stream)
+}

@@ -42,3 +42,11 @@ internal fun clientIosTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: Strin
 
     artifactRules = "out/**"
 }
+
+// Provider for registry-based template lookup
+@Suppress("unused")
+object ClientIosTemplateProvider : TemplateProvider {
+    override val key: String = "client-ios"
+    override fun create(id: String, vcsRoot: VcsRoot, p4Stream: String): Template =
+        clientIosTemplateImpl(id, vcsRoot, p4Stream)
+}
