@@ -18,14 +18,19 @@ object Configurator : ProjectConfigurator {
         // Ensure mainproject template providers are loaded locally
         TemplateRegistry.loadProvidersByClassNames(TemplateList.enabled)
 
-        // Create templates via registry by key
-        val tplDefault = TemplateRegistry.get("default").create("${idp}_tpl_default", vcsRoot, "//streams/default")
-        val tplCliIOS  = TemplateRegistry.get("client-ios").create("${idp}_tpl_client_ios", vcsRoot, "//streams/client-ios")
-        val tplCliAnd  = TemplateRegistry.get("client-android").create("${idp}_tpl_client_android", vcsRoot, "//streams/client-android")
-        val tplServer  = TemplateRegistry.get("server").create("${idp}_tpl_server", vcsRoot, "//streams/server")
-        val tplTools   = TemplateRegistry.get("tools").create("${idp}_tpl_tools", vcsRoot, "//streams/tools")
-        val tplAssets  = TemplateRegistry.get("assets").create("${idp}_tpl_assets", vcsRoot, "//streams/assets")
-        listOf(tplDefault, tplCliIOS, tplCliAnd, tplServer, tplTools, tplAssets).forEach { root.template(it) }
+        // Create templates via registry by key (map-driven, concise)
+        val templateStreams = mapOf(
+            "default"        to "//streams/default",
+            "client-ios"     to "//streams/client-ios",
+            "client-android" to "//streams/client-android",
+            "server"         to "//streams/server",
+            "tools"          to "//streams/tools",
+            "assets"         to "//streams/assets"
+        )
+        val templates = templateStreams.mapValues { (key, stream) ->
+            TemplateRegistry.get(key).create("${idp}_tpl_${key.replace('-', '_')}", vcsRoot, stream)
+        }
+        templates.values.forEach { root.template(it) }
 
         // Branch-first hierarchy: define branches and all leaf paths globally
         val branches = listOf("branch1", "branch2")
@@ -44,13 +49,14 @@ object Configurator : ProjectConfigurator {
             "assets/ui/textures", "assets/ui/layouts", "assets/ui/localization", "assets/ui/fonts", "assets/ui/videos"
         )
 
+        // Build rules from pattern -> template-key pairs
         val rules = listOf(
-            R("client/ios/**",     tplCliIOS),
-            R("client/android/**", tplCliAnd),
-            R("server/**",         tplServer),
-            R("tools/**",          tplTools),
-            R("assets/**",         tplAssets)
-        )
+            "client/ios/**"      to "client-ios",
+            "client/android/**"  to "client-android",
+            "server/**"          to "server",
+            "tools/**"           to "tools",
+            "assets/**"          to "assets"
+        ).map { (pattern, key) -> R(pattern, templates.getValue(key)) }
 
         buildForestFromPaths(
             root       = root,
@@ -58,7 +64,7 @@ object Configurator : ProjectConfigurator {
             branches   = branches,
             leafPaths  = leafPaths,
             rules      = rules,
-            defaultTpl = tplDefault,
+            defaultTpl = templates.getValue("default"),
             vcsRoot    = vcsRoot
         )
     }
