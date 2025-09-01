@@ -5,23 +5,21 @@ import jetbrains.buildServer.configs.kotlin.Project
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 import lib.ProjectConfigurator
 import lib.ProjectRegistry
+import projects.adminproject.config.AdminConfig
 
 object Configurator : ProjectConfigurator {
-    override val name: String = "adminproject"
+    override val name: String = AdminConfig.name
     override fun configure(root: Project) {
-        val idp = "v2"
-        val admin = Project { id("${idp}_Prj_Admin"); name = "Admin" }
+        val idp = AdminConfig.idp
+        val admin = Project { id("${idp}_Prj_${AdminConfig.adminProjectKey}"); name = AdminConfig.adminProjectName }
         root.subProject(admin)
         val util = BuildType {
-            id("${idp}_BT_Admin_Utilities")
-            name = "Admin: Utilities"
+            id("${idp}_BT_${AdminConfig.utilitiesBuildTypeKey}")
+            name = AdminConfig.utilitiesBuildTypeName
             steps {
                 script {
-                    name = "noop"
-                    scriptContent = """
-                        set -e
-                        echo "admin utilities placeholder"
-                    """.trimIndent()
+                    name = AdminConfig.utilitiesStepName
+                    scriptContent = AdminConfig.utilitiesScript
                 }
             }
         }
