@@ -15,10 +15,6 @@ object ProjectRegistry {
     fun byNames(names: List<String>): List<ProjectConfigurator> = names.mapNotNull { configurators[it] }
 }
 
-// Unified entrypoints
-fun configureAllProjects(root: Project) = ProjectRegistry.all().forEach { it.configure(root) }
-fun configureProjects(root: Project, names: List<String>) = ProjectRegistry.byNames(names).forEach { it.configure(root) }
-
 // Reflective loader: configure projects by FQCN of Kotlin objects implementing ProjectConfigurator
 fun configureProjectsByClassNames(root: Project, classNames: List<String>) {
     classNames.forEach { fqcn ->
