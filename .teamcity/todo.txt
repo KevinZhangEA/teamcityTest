@@ -1,6 +1,6 @@
 TODOs:
-[HIGH] [WIP] Add submit function in build jobs.
-Set github copilot prompts for Teamcity DSL to have a better usage.
+Set github copilot system prompts for Teamcity DSL to have a better usage.
+Check if the teamcity checkout policy support perforce virtual streams.
 
 
 

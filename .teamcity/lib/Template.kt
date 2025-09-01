@@ -2,7 +2,7 @@ package lib
 
 import jetbrains.buildServer.configs.kotlin.Template
 import jetbrains.buildServer.configs.kotlin.VcsRoot
-import lib.templates.*
+import templates.*
 
 // 对外统一导出（settings.kts 仍然 import lib.* 使用这些工厂）
 fun defaultTemplate(id: String, vcsRoot: VcsRoot, p4Stream: String): Template       = defaultTemplateImpl(id, vcsRoot, p4Stream)
