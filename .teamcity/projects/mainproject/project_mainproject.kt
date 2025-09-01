@@ -27,69 +27,40 @@ object Configurator : ProjectConfigurator {
         val tplAssets  = TemplateRegistry.get("assets").create("${idp}_tpl_assets", vcsRoot, "//streams/assets")
         listOf(tplDefault, tplCliIOS, tplCliAnd, tplServer, tplTools, tplAssets).forEach { root.template(it) }
 
-        data class ProjCfg(
-            val key: String,
-            val name: String,
-            val branches: List<String>,
-            val leafPaths: List<String>,
-            val rules: List<R>
+        // Branch-first hierarchy: define branches and all leaf paths globally
+        val branches = listOf("branch1", "branch2")
+        val leafPaths = listOf(
+            // client
+            "client/ios/debug", "client/ios/retail",
+            "client/android/debug", "client/android/retail",
+            // server
+            "server/game", "server/relay", "server/blaze", "server/stargate",
+            // tools
+            "tools/tools", "tools/tools1", "tools/tools2", "tools/tools3",
+            // assets
+            "assets/scripts", "assets/players", "assets/stadium", "assets/cinematics",
+            "assets/audio", "assets/designconfigs",
+            // assets/ui
+            "assets/ui/textures", "assets/ui/layouts", "assets/ui/localization", "assets/ui/fonts", "assets/ui/videos"
         )
 
-        val projectsCfg = listOf(
-            ProjCfg(
-                key = "Client",
-                name = "Client",
-                branches = listOf("develop", "release"),
-                leafPaths = listOf(
-                    "client/ios/debug", "client/ios/retail",
-                    "client/android/debug", "client/android/retail"
-                ),
-                rules = listOf(
-                    R("client/ios/**",     tplCliIOS),
-                    R("client/android/**", tplCliAnd)
-                )
-            ),
-            ProjCfg(
-                key = "Server",
-                name = "Server",
-                branches = listOf("develop", "release"),
-                leafPaths = listOf(
-                    "server/game", "server/relay", "server/blaze", "server/stargate"
-                ),
-                rules = listOf(
-                    R("server/**", tplServer)
-                )
-            ),
-            ProjCfg(
-                key = "Content",
-                name = "Content (Tools & Assets)",
-                branches = listOf("main"),
-                leafPaths = listOf(
-                    "tools/tools", "tools/tools1", "tools/tools2", "tools/tools3",
-                    "assets/scripts", "assets/players", "assets/stadium", "assets/cinematics",
-                    "assets/audio", "assets/designconfigs",
-                    "assets/ui/textures", "assets/ui/layouts", "assets/ui/localization", "assets/ui/fonts", "assets/ui/videos"
-                ),
-                rules = listOf(
-                    R("tools/**",  tplTools),
-                    R("assets/**", tplAssets)
-                )
-            )
+        val rules = listOf(
+            R("client/ios/**",     tplCliIOS),
+            R("client/android/**", tplCliAnd),
+            R("server/**",         tplServer),
+            R("tools/**",          tplTools),
+            R("assets/**",         tplAssets)
         )
 
-        projectsCfg.forEach { cfg ->
-            val prj = Project { id("${idp}_Prj_${cfg.key}"); name = cfg.name }
-            root.subProject(prj)
-            buildForestFromPaths(
-                root       = prj,
-                idp        = "${idp}_${cfg.key}",
-                branches   = cfg.branches,
-                leafPaths  = cfg.leafPaths,
-                rules      = cfg.rules,
-                defaultTpl = tplDefault,
-                vcsRoot    = vcsRoot
-            )
-        }
+        buildForestFromPaths(
+            root       = root,
+            idp        = idp,
+            branches   = branches,
+            leafPaths  = leafPaths,
+            rules      = rules,
+            defaultTpl = tplDefault,
+            vcsRoot    = vcsRoot
+        )
     }
 }
 
