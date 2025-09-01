@@ -1,8 +1,8 @@
 package lib
 
 import jetbrains.buildServer.configs.kotlin.Project
-import projects.configureMainProject as configureMainProjectImpl
-import projects.configureAdminProject as configureAdminProjectImpl
+import projects.mainproject.configureMainProject as configureMainProjectImpl
+import projects.adminproject.configureAdminProject as configureAdminProjectImpl
 
 // Unified entrypoints to configure subprojects under the root
 fun configureMainProject(root: Project) = configureMainProjectImpl(root)

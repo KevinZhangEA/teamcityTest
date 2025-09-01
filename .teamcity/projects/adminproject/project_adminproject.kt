@@ -1,4 +1,4 @@
-package projects
+package projects.adminproject
 
 import jetbrains.buildServer.configs.kotlin.BuildType
 import jetbrains.buildServer.configs.kotlin.Project

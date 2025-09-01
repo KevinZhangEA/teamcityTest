@@ -1,4 +1,4 @@
-package projects
+package projects.mainproject
 
 import jetbrains.buildServer.configs.kotlin.*
 import lib.*
@@ -12,7 +12,7 @@ fun configureMainProject(root: Project) {
     // Use the repository VCS root
     val vcsRoot = DslContext.settingsRoot
 
-    // Create and register templates on the root (P4-only)
+    // Create and register projects.templates on the root (P4-only)
     val tplDefault = defaultTemplate("${idp}_tpl_default", vcsRoot, "//streams/default")
     val tplCliIOS  = clientIosTemplate("${idp}_tpl_client_ios", vcsRoot, "//streams/client-ios")
     val tplCliAnd  = clientAndroidTemplate("${idp}_tpl_client_android", vcsRoot, "//streams/client-android")

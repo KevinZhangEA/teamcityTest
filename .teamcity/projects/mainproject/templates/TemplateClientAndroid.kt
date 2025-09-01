@@ -1,12 +1,12 @@
-package templates
+package projects.mainproject.templates
 
 import jetbrains.buildServer.configs.kotlin.*
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
 import lib.*
 
-internal fun assetsTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String) = Template {
+internal fun clientAndroidTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String) = Template {
     this.id(id)
-    name = "tpl-assets"
+    name = "tpl-client-android"
 
     params { param("GROUP_PATH","" ); param("LEAF_KEY","" ); param("BRANCH","" ) }
 
@@ -17,21 +17,21 @@ internal fun assetsTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String) 
     }
     steps {
         script {
-            name = "Build assets (Windows)"
+            name = "Build android (Windows)"
             workingDir = "%teamcity.build.checkoutDir%"
             scriptContent = """
                 setlocal EnableDelayedExpansion
                 
-                if not exist codebase\buildscripts\build_assets.bat (
-                  echo [error] missing codebase\buildscripts\build_assets.bat
+                if not exist codebase\buildscripts\build_android.bat (
+                  echo [error] missing codebase\buildscripts\build_android.bat
                   exit /b 1
                 )
-                call codebase\buildscripts\build_assets.bat
+                call codebase\buildscripts\build_android.bat
 
                 set rc=!errorlevel!
-                echo [debug] build_assets.bat rc=!rc!
+                echo [debug] build_android.bat rc=!rc!
                 if not "!rc!"=="0" (
-                  echo [error] build_assets.bat failed with code !rc!
+                  echo [error] build_android.bat failed with code !rc!
                   exit /b !rc!
                 )
                 
@@ -39,7 +39,7 @@ internal fun assetsTemplateImpl(id: String, vcsRoot: VcsRoot, p4Stream: String) 
                 (
                   echo groupPath: %GROUP_PATH%
                   echo leafKey:   %LEAF_KEY%
-                  echo category:  assets
+                  echo platform:  android
                   echo time:      %%date%% %%time%%
                 ) > out/output.txt
             """.trimIndent()
