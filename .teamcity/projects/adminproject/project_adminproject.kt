@@ -32,7 +32,7 @@ object Configurator : ProjectConfigurator {
             name = "Agent Init: MacOS"
 
             params {
-                param("agent", "", type = "select", "data_1" to "%teamcity.agents.macos%")
+                param("agent", "", type = "select", "data_1" to "%teamcity.agents.macos%", "display" to "prompt")
             }
 
             // Only run on agents that don't have the "macos-initialized" tag
@@ -62,7 +62,7 @@ object Configurator : ProjectConfigurator {
             name = "Agent Init: Linux"
 
             params {
-                param("agent", "", type = "select", "data_1" to "%teamcity.agents.linux%")
+                param("agent", "", type = "select", "data_1" to "%teamcity.agents.linux%", "display" to "prompt")
             }
 
             // Only run on agents that don't have the "linux-initialized" tag
@@ -92,7 +92,7 @@ object Configurator : ProjectConfigurator {
             name = "Agent Init: Windows"
 
             params {
-                param("agent", "", type = "select", "data_1" to "%teamcity.agents.windows%")
+                param("agent", "", type = "select", "data_1" to "%teamcity.agents.windows%", "display" to "prompt")
             }
 
             // Only run on agents that don't have the "windows-initialized" tag
